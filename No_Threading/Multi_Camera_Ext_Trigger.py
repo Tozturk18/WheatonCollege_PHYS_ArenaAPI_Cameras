@@ -15,6 +15,7 @@ import Save_Image
 import Parse_CSV
 import threading
 import time
+import serial
 
 from arena_api.system import system
 
@@ -75,7 +76,7 @@ def link_cameras_to_devices(devices):
 
 	return cameras, SETTINGS
 
-def get_multiple_image_buffers(camera):
+def get_multiple_image_buffers(camera, ser):
 	'''
 	This function demonstrates an acquisition on a device
 
@@ -86,9 +87,7 @@ def get_multiple_image_buffers(camera):
 
 	# Print image buffer info
 	for count in range(NUMBER_OF_BUFFERS):
-		
-		Arena_Helper.safe_print("Ready!")	
-		
+
 		buffer = camera.device.get_buffer()
 
 		Arena_Helper.safe_print(
@@ -98,7 +97,7 @@ def get_multiple_image_buffers(camera):
 				f'Pixel Format = {buffer.pixel_format.name}')
 
 		''' Save Image '''
-		Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width)
+		Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width, ser)
 		Arena_Helper.safe_print("\nImage Saved\n")
 
 		'''
@@ -107,14 +106,18 @@ def get_multiple_image_buffers(camera):
 		'''
 		camera.device.requeue_buffer(buffer)
 
-def initiate_imaging(cameras, SETTINGS, INDEX):
+def initiate_imaging(cameras, SETTINGS, INDEX, ser):
 
 	for INDEX in range(len(SETTINGS['exp'])):
 	
 		Camera_Object.change_config(cameras, SETTINGS, INDEX)
 
+		ser.write('a')
+
+		Arena_Helper.safe_print("Ready!")
+
 		for camera in cameras:
-			get_multiple_image_buffers(camera)
+			get_multiple_image_buffers(camera, ser)
 
 def restore_initials(cameras):
 
@@ -132,7 +135,10 @@ def entry_point():
 
 	Camera_Object.configure_cameras(cameras)
 
-	initiate_imaging(cameras, SETTINGS, INDEX)
+	# Baud rate is 3M ~ 333.33ns per character
+	ser = serial.Serial('/dev/tty.USB0', 3000000, timeout=0.1)
+
+	initiate_imaging(cameras, SETTINGS, INDEX, ser)
 
 	restore_initials(cameras)
 
