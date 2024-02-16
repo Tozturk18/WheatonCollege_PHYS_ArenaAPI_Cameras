@@ -252,9 +252,10 @@ def configure_cameras(cameras):
         Arena_Helper.safe_print('GevSCPD2: ', camera.nodes['GevSCPD'].value)
 
         # store camera values
-        camera.dev_serial =  camera.nodes['DeviceSerialNumber'].value
-        camera.dev_power = camera.nodes['DeviceModelName'].value
-        camera.dev_model = camera.nodes['DevicePower'].value
+        camera.dev_serial   =  camera.nodes['DeviceSerialNumber'].value
+        camera.dev_power    = camera.nodes['DevicePower'].value
+        camera.dev_model    = camera.nodes['DeviceModelName'].value
+        
 
     '''
         Wait until the PTP connection is established

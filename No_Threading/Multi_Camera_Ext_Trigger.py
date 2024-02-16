@@ -97,10 +97,6 @@ def get_multiple_image_buffers(camera):
 				f'Height = {buffer.height} pxl, '
 				f'Pixel Format = {buffer.pixel_format.name}')
 
-		
-		
-		
-
 		''' Save Image '''
 		Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width)
 		Arena_Helper.safe_print("\nImage Saved\n")
@@ -139,8 +135,6 @@ def entry_point():
 	initiate_imaging(cameras, SETTINGS, INDEX)
 
 	restore_initials(cameras)
-
-
 
 if __name__ == "__main__":
 	entry_point()
