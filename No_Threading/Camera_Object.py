@@ -50,9 +50,9 @@ class Camera:
         self.nodes['Height'].value = self.nodes['Height'].max
         self.nodes['PixelFormat'].value = 'Mono12'
 
-        self.store_initials()
+        self.__store_initials()
 
-    def store_initials(self):
+    def __store_initials(self):
         # Save initial values to restore them before ending the program
         self.initial_values  = [
             self.nodes['TriggerSelector'].value, self.nodes['TriggerMode'].value,
@@ -80,7 +80,7 @@ class Camera:
         self.nodes['AcquisitionStartMode'].value = self.initial_values[10]
         self.nodes['PtpEnable'].value = self.initial_values[11]
         
-        Arena_Helper.safe_print("\nRestored back to initials",
+        Arena_Helper.safe_print("\nCamera: ", self.name,
         	"\nTriggerSelector: ", self.nodes['TriggerSelector'].value,
         	"\nTriggerMode: ", self.nodes['TriggerMode'].value,
         	"\nTriggerSource: ", self.nodes['TriggerSource'].value,
@@ -93,14 +93,7 @@ class Camera:
         	"\nAcquisitionStartMode: ", self.nodes['AcquisitionStartMode'].value,
         	"\nPtpEnable: ", self.nodes['PtpEnable'].value)
 
-    def _change_config(self, exposure, offset, gain):
-
-        self.device.stop_stream()
-        
-        self.exposure = exposure
-        self.offset = offset
-        self.gain = gain
-        
+    def __set_framerate(self):
         # Make sure the framerate is such that an exposure can be taken
         # between two succesive frames
         framerate = 0.90 / self.exposure
@@ -112,7 +105,15 @@ class Camera:
 
         # Set camera's framerate
         self.nodes['AcquisitionFrameRate'].value = framerate
-        
+
+    def __set_exposure(self, exposure):
+
+        # Set the exposure
+        self.exposure = exposure
+
+        # Adjust the framerate before changing the exposure
+        self.__set_framerate()
+
         # Turn off auto exposure [possibilities are Continuous or Off]
         # And check to make sure we can change the exposure time
         if self.nodemap['ExposureAuto'].value == 'Continuous':
@@ -121,14 +122,22 @@ class Camera:
             raise Exception("ExposureTime node not found")
         if self.nodemap['ExposureTime'].is_writable is False:
             raise Exception("ExposureTime node is not writable")
-        
-        ''' 1/frameaRate * 0.8 = exposure'''
 
         # Set the exposure time (internally in microseconds)
         self.nodes['ExposureTime'].value = self.exposure * 1e6
 
+    def __set_offset(self, offset):
+
+        # Set the offset
+        self.offset = offset
+
         # Set the black level (offset) in ADU
         self.nodes['BlackLevelRaw'].value = self.offset
+
+    def __set_gain(self, gain):
+
+        # Set the gain
+        self.gain = gain
 
         # Turn off automatic gain [possibilities are Continuous or Off]
         if self.nodemap['GainAuto'].value == 'Continuous':
@@ -136,7 +145,18 @@ class Camera:
         
         # Change Gain levels
         self.nodes['Gain'].value = self.gain
+
+    def __change_config(self, exposure, offset, gain):
+
+        # Stop the stream to edit the camera configuration
+        self.device.stop_stream()
         
+        # Set the exposure, offset, and gain
+        self.__set_exposure(exposure)
+        self.__set_offset(offset)
+        self.__set_gain(gain)
+        
+        # Notify the user of new camera configuration
         Arena_Helper.safe_print(
             '\nCamera: ', self.name,
             '\nImages:', self.nodes['Width'].value, 'x',  self.nodes['Height'].value, self.nodes['PixelFormat'].value,
@@ -146,6 +166,7 @@ class Camera:
             '\nOffset (ADU)   \t=', self.offset,
             '\nGain (dB)      \t=', self.gain)
         
+        # Restart the after changing camera configuration
         self.device.start_stream(self.buffers)
 
 
@@ -218,25 +239,6 @@ def configure_cameras(cameras):
         # Enable stream packet resend
         camera.tl_stream_nodemap['StreamPacketResendEnable'].value = True
         
-        '''
-        # Double check and print exposure essentials
-        exptime = camera.nodes['ExposureTime'].value/1e6
-        offset  = camera.nodes['BlackLevelRaw'].value
-        gain    = camera.nodes['Gain'].value
-        devSrl  = camera.nodes['DeviceSerialNumber'].value
-        devModel= camera.nodes['DeviceModelName'].value
-        devPower= camera.nodes['DevicePower'].value
-            
-        Arena_Helper.safe_print(
-            'Camera: ', camera.name,
-            '\nImages:', camera.nodes['Width'].value, 'x',  camera.nodes['Height'].value, camera.nodes['PixelFormat'].value,
-            '\nTemperature (C)\t=', camera.nodes['DeviceTemperature'].value, 
-            '\nFramerate (Hz) \t=', camera.nodes['AcquisitionFrameRate'].value, 
-            '\nExptime (s)    \t=', exptime,
-            '\nOffset (ADU)   \t=', offset,
-            '\nGain (dB)      \t=', gain)
-            '''
-        
         total		= len(cameras)
         packetSize	= 9014		# Bytes
         devLink		= 125000000	# 1 Gbps
@@ -245,29 +247,22 @@ def configure_cameras(cameras):
         
         delay = delay + (delay * a_buffer)
         
-        Arena_Helper.safe_print('GevSCPD: ', int( math.ceil( delay * (total - 1) / 10000) ) * 10000 )
-        #Arena_Helper.safe_print('GevSCFTD: ', int( math.ceil( delay * cam / 10000 ) ) * 10000 )
-        
         camera.nodes['GevSCPD'].value = int( math.ceil( delay * (total - 1) / 10000) * 10000 )
-        #camera.nodes['GevSCFTD'].value = int( math.ceil( delay * cam / 10000 ) * 10000 )
         
         Arena_Helper.safe_print('GevSCPD2: ', camera.nodes['GevSCPD'].value)
-        #Arena_Helper.safe_print('GevSCFTD2: ', camera.nodes['GevSCFTD'].value)
-        
-        devSrl  = camera.nodes['DeviceSerialNumber'].value
-        devModel= camera.nodes['DeviceModelName'].value
-        devPower= camera.nodes['DevicePower'].value
 
         # store camera values
-        camera.dev_serial =  devSrl
-        camera.dev_power = devPower
-        camera.dev_model = devModel
+        camera.dev_serial =  camera.nodes['DeviceSerialNumber'].value
+        camera.dev_power = camera.nodes['DeviceModelName'].value
+        camera.dev_model = camera.nodes['DevicePower'].value
 
     '''
         Wait until the PTP connection is established
         Start Sync Check
     '''
 
+
+    '''
     masterfound = False
     restartSyncCheck = True
 
@@ -292,9 +287,31 @@ def configure_cameras(cameras):
             elif (ptpStatus != "Slave"):
                 # There are still undifined camers
                 restartSyncCheck = True
+    '''
 
+    masterfound = False
+    restartSyncCheck = True
+
+    while restartSyncCheck and not masterfound:
+        restartSyncCheck = False
+
+        # Get the PTP status for all the cameras
+        ptp_statuses = [camera.nodes['PtpStatus'].value for camera in cameras]
+
+        # Check if there are any Masters in PTP_Statuses
+        if any(status == "Master" for status in ptp_statuses):
+            if masterfound:
+                # There are still multiple masters, continue negotiating
+                restartSyncCheck = True
+            masterfound = True
+        elif any(status != "Slave" for status in ptp_statuses):
+            # There are still undefined cameras
+            restartSyncCheck = True
+
+    # Notify the user
     Arena_Helper.safe_print("PTP sync check done!")
 
+    '''
     for camera in cameras:
         # Start stream with 25 buffers
         camera.device.start_stream(camera.buffers)
@@ -303,6 +320,16 @@ def configure_cameras(cameras):
         
         while trigger_armed is False:
             trigger_armed = bool(camera.nodemap['TriggerArmed'].value)
+    '''
+
+    for camera in cameras:
+        # Start stream with the number of buffers
+        camera.device.start_stream(camera.buffers)
+
+    # Wait until all cameras have the trigger armed
+    while any(not bool(camera.nodemap['TriggerArmed'].value) for camera in cameras):
+        pass
+
 
 def change_config(cameras, data, index):
 

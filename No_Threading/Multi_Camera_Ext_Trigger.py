@@ -84,8 +84,6 @@ def get_multiple_image_buffers(camera):
 	(3) Requeue each buffer
 	'''
 
-	#thread_id = f'''{camera.nodemap['DeviceModelName'].value}''' f'''-{camera.nodemap['DeviceSerialNumber'].value} |'''
-
 	# Print image buffer info
 	for count in range(NUMBER_OF_BUFFERS):
 		
@@ -100,28 +98,20 @@ def get_multiple_image_buffers(camera):
 				f'Pixel Format = {buffer.pixel_format.name}')
 
 		
-		'''
-		`Device.requeue_buffer()` takes a buffer or many buffers in a list or
-		tuple
-		'''
+		
 		
 
 		''' Save Image '''
 		Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width)
 		Arena_Helper.safe_print("\nImage Saved\n")
-		
+
+		'''
+		`Device.requeue_buffer()` takes a buffer or many buffers in a list or
+		tuple
+		'''
 		camera.device.requeue_buffer(buffer)
 
-		#Arena_Helper.safe_print(f'{thread_id:>30}', f'\tbuffer{count:{2}} requeued | ')
-
-def entry_point():
-
-	thread_list = []
-	devices = Arena_Helper.update_create_devices()
-	
-	cameras, SETTINGS = link_cameras_to_devices(devices)
-
-	Camera_Object.configure_cameras(cameras)
+def initiate_imaging(cameras, SETTINGS, INDEX):
 
 	for INDEX in range(len(SETTINGS['exp'])):
 	
@@ -130,29 +120,25 @@ def entry_point():
 		for camera in cameras:
 			get_multiple_image_buffers(camera)
 
-		'''for camera in cameras:
-			thread = threading.Thread(target=get_multiple_image_buffers, args=(camera,))
-			# Add a thread to the thread list
-			thread_list.append(thread)
+def restore_initials(cameras):
 
-		# Start each thread in the thread list
-		for thread in thread_list:
-			thread.start()
-
-		# Join each thread in the thread list
-		'''
-		'''
-		Calling thread is blocked util the thread object on which it was
-			called is terminated.
-		'''
-		'''
-		for thread in thread_list:
-			thread.join()
-		'''
+	Arena_Helper.safe_print("\nRestoring Configuration to Initials...\n")
 
 	# Restore initial values
 	for camera in cameras:
 		camera.restore_initials()
+
+def entry_point():
+
+	devices = Arena_Helper.update_create_devices()
+	
+	cameras, SETTINGS = link_cameras_to_devices(devices)
+
+	Camera_Object.configure_cameras(cameras)
+
+	initiate_imaging(cameras, SETTINGS, INDEX)
+
+	restore_initials(cameras)
 
 
 

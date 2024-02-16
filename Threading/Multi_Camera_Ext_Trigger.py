@@ -75,7 +75,7 @@ def link_cameras_to_devices(devices):
 
 	return cameras, SETTINGS
 
-def get_multiple_image_buffers(camera, SETTINGS, INDEX):
+def get_multiple_image_buffers(camera):
 	'''
 	This function demonstrates an acquisition on a device
 
@@ -83,9 +83,6 @@ def get_multiple_image_buffers(camera, SETTINGS, INDEX):
 	(2) Print each buffer info
 	(3) Requeue each buffer
 	'''
-	
-	Arena_Helper.safe_print("Implementing New Settings")
-	Camera_Object.change_config(camera, SETTINGS, INDEX)
 	
 	thread_id = f'''{camera.nodemap['DeviceModelName'].value}''' f'''-{camera.nodemap['DeviceSerialNumber'].value} |'''
 
@@ -128,20 +125,18 @@ def entry_point():
 
 	for INDEX in range(len(SETTINGS['exp'])):
 	
-		
+		config_thread = threading.Thread(target=Camera_Object.change_config, args=(cameras, SETTINGS, INDEX,))
 
 		for camera in cameras:
-			thread = threading.Thread(target=get_multiple_image_buffers, args=(camera, SETTINGS, INDEX,))
+			thread = threading.Thread(target=get_multiple_image_buffers, args=(camera,))
 			# Add a thread to the thread list
 			thread_list.append(thread)
+
+		thread_list.append(config_thread)
 
 	# Start each thread in the thread list
 	for thread in thread_list:
 		thread.start()
-		
-		'''if i != 0 and i % len(cameras) == 0:
-			Camera_Object.change_config(cameras, SETTINGS, INDEX)
-			INDEX = INDEX + 1'''
 
 	# Join each thread in the thread list
 	'''
@@ -150,8 +145,6 @@ def entry_point():
 	'''
 	for thread in thread_list:
 		thread.join()
-
-		
 
 	# Restore initial values
 	for camera in cameras:

@@ -94,12 +94,24 @@ class Camera:
         	"\nPtpEnable: ", self.nodes['PtpEnable'].value)
 
     def _change_config(self, exposure, offset, gain):
-    	
-        self.device.stop_stream()
 
+        self.device.stop_stream()
+        
         self.exposure = exposure
         self.offset = offset
         self.gain = gain
+        
+        # Make sure the framerate is such that an exposure can be taken
+        # between two succesive frames
+        framerate = 0.90 / self.exposure
+
+        # However don't go beyond the camera's maximum frame rate
+        maxframerate = self.nodes['AcquisitionFrameRate'].max
+        if framerate > maxframerate:
+            framerate = maxframerate
+
+        # Set camera's framerate
+        self.nodes['AcquisitionFrameRate'].value = framerate
         
         # Turn off auto exposure [possibilities are Continuous or Off]
         # And check to make sure we can change the exposure time
@@ -109,6 +121,8 @@ class Camera:
             raise Exception("ExposureTime node not found")
         if self.nodemap['ExposureTime'].is_writable is False:
             raise Exception("ExposureTime node is not writable")
+        
+        ''' 1/frameaRate * 0.8 = exposure'''
 
         # Set the exposure time (internally in microseconds)
         self.nodes['ExposureTime'].value = self.exposure * 1e6
@@ -123,8 +137,16 @@ class Camera:
         # Change Gain levels
         self.nodes['Gain'].value = self.gain
         
+        Arena_Helper.safe_print(
+            '\nCamera: ', self.name,
+            '\nImages:', self.nodes['Width'].value, 'x',  self.nodes['Height'].value, self.nodes['PixelFormat'].value,
+            '\nTemperature (C)\t=', self.nodes['DeviceTemperature'].value, 
+            '\nFramerate (Hz) \t=', self.nodes['AcquisitionFrameRate'].value, 
+            '\nExptime (s)    \t=', self.exposure,
+            '\nOffset (ADU)   \t=', self.offset,
+            '\nGain (dB)      \t=', self.gain)
+        
         self.device.start_stream(self.buffers)
-
 
 
 def configure_cameras(cameras):
@@ -144,7 +166,8 @@ def configure_cameras(cameras):
         # Enable frame rate change, if needed
         if camera.nodemap['AcquisitionFrameRateEnable'].value is False:
             camera.nodemap['AcquisitionFrameRateEnable'].value = True
-
+            
+        '''
         # Make sure the framerate is such that an exposure can be taken
         # between two succesive frames
         framerate = 0.90 / camera.exposure
@@ -178,7 +201,8 @@ def configure_cameras(cameras):
         
         # Change Gain levels
         camera.nodes['Gain'].value = camera.gain
-
+        '''
+        
         # Enable external trigger
         camera.nodes['TriggerSelector'].value = 'FrameStart'
         camera.nodes['TriggerActivation'].value = 'RisingEdge'
@@ -193,7 +217,8 @@ def configure_cameras(cameras):
         camera.tl_stream_nodemap['StreamAutoNegotiatePacketSize'].value = True
         # Enable stream packet resend
         camera.tl_stream_nodemap['StreamPacketResendEnable'].value = True
-
+        
+        '''
         # Double check and print exposure essentials
         exptime = camera.nodes['ExposureTime'].value/1e6
         offset  = camera.nodes['BlackLevelRaw'].value
@@ -210,7 +235,7 @@ def configure_cameras(cameras):
             '\nExptime (s)    \t=', exptime,
             '\nOffset (ADU)   \t=', offset,
             '\nGain (dB)      \t=', gain)
-
+            '''
         
         total		= len(cameras)
         packetSize	= 9014		# Bytes
@@ -229,7 +254,9 @@ def configure_cameras(cameras):
         Arena_Helper.safe_print('GevSCPD2: ', camera.nodes['GevSCPD'].value)
         #Arena_Helper.safe_print('GevSCFTD2: ', camera.nodes['GevSCFTD'].value)
         
-        
+        devSrl  = camera.nodes['DeviceSerialNumber'].value
+        devModel= camera.nodes['DeviceModelName'].value
+        devPower= camera.nodes['DevicePower'].value
 
         # store camera values
         camera.dev_serial =  devSrl
@@ -263,7 +290,7 @@ def configure_cameras(cameras):
                 masterfound = True
 
             elif (ptpStatus != "Slave"):
-                # There are still undifined cameras
+                # There are still undifined camers
                 restartSyncCheck = True
 
     Arena_Helper.safe_print("PTP sync check done!")
@@ -277,18 +304,14 @@ def configure_cameras(cameras):
         while trigger_armed is False:
             trigger_armed = bool(camera.nodemap['TriggerArmed'].value)
 
-def change_config(camera, data, index):
+def change_config(cameras, data, index):
 
     cams        = data['cams'][index]
     exposure    = float(data['exp'][index])
     offset      = int(data['off'][index])
     gain        = float(data['gain'][index])
-    
-    time.sleep(cams.index(camera.name) + index)
-    
-    camera._change_config(exposure,offset,gain)
-    
-    '''gen = (camera for camera in cameras if camera.name in cams)
-    
+
+    gen = (camera for camera in cameras if camera.name in cams)
+
     for camera in gen:
-    	camera._change_config(exposure,offset,gain)'''
+        camera._change_config(exposure,offset,gain)
