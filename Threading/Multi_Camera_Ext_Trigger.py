@@ -32,12 +32,12 @@ def link_cameras_to_devices(devices):
 	#cams, myexptime_s, myoffset_adu, mygain_db = Camera_Detection.getArgs()
 	
 
-	SETTINGS = Parse_CSV.loadSettings("input.csv")
+	SETTINGS = Parse_CSV.load_camera_settings("input.csv")
 
-	cams 		= SETTINGS['cams'][INDEX]
-	myexptime_s 	= float(SETTINGS['exp'][INDEX])
-	myoffset_adu 	= int(SETTINGS['off'][INDEX])
-	mygain_db 	= float(SETTINGS['gain'][INDEX])
+	cams 			= SETTINGS[INDEX].cameras
+	myexptime_s 	= SETTINGS[INDEX].exposure
+	myoffset_adu 	= SETTINGS[INDEX].offset
+	mygain_db 		= SETTINGS[INDEX].gain
 	
 
 	# Get the devices currently connected to the computer
