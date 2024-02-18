@@ -14,9 +14,9 @@ def update_create_devices():
 	Waits for the user to connect a device before
 		raising an exception if it fails
 	'''
-	tries = 0
-	tries_max = 6
-	sleep_time_secs = 10
+	tries: int = 0
+	tries_max: int = 6
+	sleep_time_secs: int = 10
 	devices = None
 	while tries < tries_max:  # Wait for device for 60 seconds
 		devices = system.create_device()

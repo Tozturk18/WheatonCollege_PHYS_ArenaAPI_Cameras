@@ -9,7 +9,7 @@ import Camera_Object
 rgbSerial = np.array([213301046, 211300110, 223200097])
 
 def getSerial(devices):
-	nDevFound = len(devices)
+	nDevFound: int = len(devices)
 	detectedSerials = np.zeros(nDevFound, dtype=np.uint32)
 	ii=0
 	for device in devices:
@@ -19,7 +19,7 @@ def getSerial(devices):
 	return detectedSerials
 
 
-def cameraToSerial(camName):
+def cameraToSerial(camName: str):
 	# Given camera name (r or g or b),
 	# return the serial number of that camera.
 	if camName == 'r':
@@ -35,7 +35,7 @@ def cameraToSerial(camName):
 	return serial
 
 
-def serialToCamera(serial):
+def serialToCamera(serial: int):
 	# Given camera's serial number, return the camera name
 	if serial == rgbSerial[0]:
 		name = 'r'
@@ -68,6 +68,8 @@ def findCamInDetectedDeviceList (camSrl, detectedDeviceList):
 
 	return devNum[0]
 
+# Below code is disabled because it is no longer used thanks to reading from input.csv
+'''
 def getArgs(argv=None):
 	descr='Take an image with the PHX050S camera, given \
 		exposure time in seconds, offset in ADUs, and the   \
@@ -84,11 +86,6 @@ def getArgs(argv=None):
 		nargs = '+',
 		dest='cams',
 		help="Camera name. Has to be either r/g/b/0/1/2.")
-	'''requiredNamed.add_argument('-c2', 
-		type=str.lower, 
-		required=True, 
-		dest='cam2',
-		help="Camera name. Has to be either r/g/b/0/1/2.")'''
 	requiredNamed.add_argument('-e', 
 		type=float, 
 		required=True, 
@@ -127,3 +124,4 @@ def getArgs(argv=None):
 		sys.exit(0)
 
 	return args.cams[0], args.exp, args.offset, args.gain
+'''
