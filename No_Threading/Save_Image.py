@@ -6,6 +6,9 @@ import numpy as np
 from astropy.io import fits
 from astropy.time import Time
 import serial
+import time
+
+import json
 
 def save_image(camera, pdata, height, width, ser):
 
@@ -13,9 +16,11 @@ def save_image(camera, pdata, height, width, ser):
 
 	nparray_reshaped = np.ctypeslib.as_array(pdata_as16, (height, width))
 
-	line = ser.readline()
+	#line = ser.readline()
 
-	data = line.eval()
+	line = '{"time":' +  f"{time.time_ns()}" + ', "temp": 21.2, "pressure": 1, "humid": 20 }'
+
+	data = json.loads(line)
 
 	t = Time(data["time"], scale='tai')
 

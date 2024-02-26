@@ -112,9 +112,9 @@ def initiate_imaging(cameras, SETTINGS, INDEX, ser):
 	
 		Camera_Object.change_config(cameras, SETTINGS, INDEX)
 
-		ser.write('a')
-
 		Arena_Helper.safe_print("Ready!")
+
+		ser.write('0')
 
 		for camera in cameras:
 			get_multiple_image_buffers(camera, ser)
