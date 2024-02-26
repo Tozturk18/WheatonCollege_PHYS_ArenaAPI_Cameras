@@ -1,32 +1,66 @@
 import csv
+from typing import NamedTuple, List
+import sys
 
-def loadSettings(filename):
-    """ Reads a CSV file containing settings for the cameras.
-        Converts the CSV file into a dictionary.
-        Joins the first 3 columns into 1 array
+class CameraSettings(NamedTuple):
+    cameras: List[str]
+    exposure: float
+    offset: int
+    gain: float 
 
-        The CSV file format:
-        cam1, cam2, cam3, exposure, offset, gain
+def load_camera_settings(filename: str):
+    """ 
+    Reads a CSV file containing settings for the cameras.
+    Converts the CSV file into a NamedTuple.
+    Joins the first 3 columns into 1 array
+
+    The CSV file format:
+    cam1, cam2, cam3, exp, off, gain
+    (Note: the header names has to be as given above)
     
     Args:
-        csv_file: The path to the CSV file.
+        :param csv_file: The path to the CSV file containing 
+                camera settings (type: string).
 
     Returns:
-        A dictionary, where the keys are the column header names 
-            and the values are lists of the values in that column.
+        :return: A dictionary, where the keys are the column header names 
+                and the values are lists of the values in that column.
     """
 
+    # Open the csv file with read permission
     with open(filename, "r") as csvfile:
+        # Using CSV module, create a reader
         reader = csv.reader(csvfile)
-        header = next(reader)
-        data = {}
-        camNum = 0
+        header = next(reader)   # Read the head
+
+        camera_sets: [CameraSettings] = []  # Initialize an array to hold the CameraSettings NamedTuple
+        camera_amount: int = 0              # Initialize a variable to hold the number of cameras
+
+        # Count the number of cameras
         for column in header:
             if "cam" in column:
-                camNum = camNum + 1
-        for row in reader:
-            data.setdefault("cams", []).append(row[:camNum])
-            for i, column_name in enumerate(header[camNum:]):
-                data.setdefault(column_name, []).append(row[i + camNum])
+                camera_amount = camera_amount + 1
 
-    return data
+        # Create temporary variables for creating the NamedTuples
+        cameras: List[str]
+        exposure: float
+        offset: int
+        gain: float
+
+        # Itterate through each row of the CSV file
+        for row in reader:
+            cameras = row[:camera_amount]
+            for index, column_name in enumerate(header[camera_amount:]):
+                
+                if (column_name == "exp"):
+                    exposure = float(row[index + camera_amount])
+                elif(column_name == "off"):
+                    offset = int(row[index + camera_amount])
+                elif(column_name == "gain"):
+                    gain = float(row[index + camera_amount])
+                else:
+                    sys.exit(f"Error! {filename} was wrongly formatted. Please check column names!")
+
+            camera_sets.append( CameraSettings(cameras, exposure, offset, gain) )
+
+    return camera_sets
