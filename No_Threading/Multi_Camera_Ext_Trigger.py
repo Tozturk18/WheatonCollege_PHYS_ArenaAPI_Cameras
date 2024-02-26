@@ -33,7 +33,7 @@ def link_cameras_to_devices(devices):
 	#cams, myexptime_s, myoffset_adu, mygain_db = Camera_Detection.getArgs()
 	
 
-	SETTINGS = Parse_CSV.loadSettings("input.csv")
+	SETTINGS = Parse_CSV.load_camera_settings("input.csv")
 
 	cams 			= SETTINGS[INDEX].cameras
 	myexptime_s 	= SETTINGS[INDEX].exposure
@@ -108,13 +108,13 @@ def get_multiple_image_buffers(camera, ser):
 
 def initiate_imaging(cameras, SETTINGS, INDEX, ser):
 
-	for INDEX in range(len(SETTINGS['exp'])):
+	for INDEX in range(len(SETTINGS)):
 	
 		Camera_Object.change_config(cameras, SETTINGS, INDEX)
 
 		Arena_Helper.safe_print("Ready!")
 
-		ser.write('0')
+		ser.write(b'0')
 
 		for camera in cameras:
 			get_multiple_image_buffers(camera, ser)
@@ -129,18 +129,23 @@ def restore_initials(cameras):
 
 def entry_point():
 
-	devices = Arena_Helper.update_create_devices()
+	try:
+		devices = Arena_Helper.update_create_devices()
+		
+		cameras, SETTINGS = link_cameras_to_devices(devices)
+
+		Camera_Object.configure_cameras(cameras)
+
+		# Baud rate is 3M ~ 333.33ns per character
+		ser = serial.Serial('/dev/ttyUSB0', 3000000, timeout=0.1)
+
+		initiate_imaging(cameras, SETTINGS, INDEX, ser)
+
+		restore_initials(cameras)
 	
-	cameras, SETTINGS = link_cameras_to_devices(devices)
+	except KeyboardInterrupt:
+		restore_initials(cameras)
 
-	Camera_Object.configure_cameras(cameras)
-
-	# Baud rate is 3M ~ 333.33ns per character
-	ser = serial.Serial('/dev/tty.USB0', 3000000, timeout=0.1)
-
-	initiate_imaging(cameras, SETTINGS, INDEX, ser)
-
-	restore_initials(cameras)
 
 if __name__ == "__main__":
 	entry_point()

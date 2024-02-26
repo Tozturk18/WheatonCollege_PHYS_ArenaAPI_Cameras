@@ -6,6 +6,9 @@ import numpy as np
 from astropy.io import fits
 from astropy.time import Time
 import serial
+import time
+
+import json
 
 def save_image(camera, pdata, height, width, ser):
 
@@ -13,13 +16,17 @@ def save_image(camera, pdata, height, width, ser):
 
 	nparray_reshaped = np.ctypeslib.as_array(pdata_as16, (height, width))
 
-	line = ser.readline()
+	#line = ser.readline()
 
-	data = line.eval()
+	line = '{"time":' +  f"{time.time()}" + ', "temp": "21.2", "pressure": "1", "humid": "20"}'
 
-	t = Time(data["time"], scale='tai')
+	data = json.loads(line)
 
-	#t = Time.now()    # Get the time right after getting the buffer
+	Arena_Helper.safe_print(data)
+
+	#t = Time(data["time"], scale='tai')
+
+	t = Time.now()    # Get the time right after getting the buffer
 	mjd_now = t.mjd
 	utc_now = t.isot
 
@@ -61,9 +68,9 @@ def save2fits(camera, imgarray, utc_isot, mjd, data, imgtyp='LIGHT'):
 	hdr['OFFSET']   = (camera.offset,     'Black-level offset [ADU]')
 	hdr['GAIN']     = (camera.gain,        'Gain [dB]')
 	hdr['DET-TEMP'] = (camera.nodes['DeviceTemperature'].value,    'Detector temperature [C]')
-	hdr['ENV-TEMP']	= (data["temp"],	'Environmental Temperature [C]'),
-	hdr['ENV-PRES']= (data["pressure"],	'Environmental Pressure [Pa]'),
-	hdr['ENV-HUMD']	= (data["humidity"],	'Environmental Humidity [%]'),
+	#hdr['ENV-TEMP']	= (int(data["temp"]),	'Environmental Temperature [C]'),
+	#hdr['ENV-PRES'] = (data["pressure"],	'Environmental Pressure [Pa]'),
+	#hdr['ENV-HUMD']	= (data["humidity"],	'Environmental Humidity [%]'),
 	hdr['DEV-PWR']  = (camera.dev_power,      'Device power [Watts]')
 	hdr['DET-SRL']  = (camera.dev_serial,     'Serial number of detector')
 	hdr['DET-MDL']  = (camera.dev_model,      'Model of device')
