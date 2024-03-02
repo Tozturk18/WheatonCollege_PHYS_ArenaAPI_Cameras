@@ -42,7 +42,7 @@ class Camera:
 							'TriggerActivation','Width', 'Height', 
 							'PixelFormat', 'AcquisitionMode', 'AcquisitionStartMode', 'PtpEnable', 'PtpStatus','DeviceTemperature', 
 							'AcquisitionFrameRate', 'ExposureTime', 'BlackLevelRaw', 
-							'Gain', 'DeviceSerialNumber','DeviceModelName','DevicePower','GevSCPD','GevSCFTD']
+							'Gain', 'DeviceSerialNumber','DeviceModelName','DevicePower','GevSCPD']
 							)
 
 		# Set some initial values
@@ -59,7 +59,7 @@ class Camera:
 			self.nodes['TriggerSource'].value, self.nodes['TriggerActivation'].value,
 			self.nodes['AcquisitionMode'].value, self.tl_stream_nodemap['StreamBufferHandlingMode'].value,
 			self.tl_stream_nodemap['StreamAutoNegotiatePacketSize'].value, self.tl_stream_nodemap['StreamPacketResendEnable'].value,
-			self.nodes['GevSCPD'].value, self.nodes['GevSCFTD'].value,
+			self.nodes['GevSCPD'].value,
 			self.nodes['AcquisitionStartMode'].value, self.nodes['PtpEnable'].value
 			]
 
@@ -76,9 +76,8 @@ class Camera:
 		self.tl_stream_nodemap['StreamAutoNegotiatePacketSize'].value = self.initial_values[6]
 		self.tl_stream_nodemap['StreamPacketResendEnable'].value = self.initial_values[7]
 		self.nodes['GevSCPD'].value = self.initial_values[8]
-		self.nodes['GevSCFTD'].value = self.initial_values[9]
-		self.nodes['AcquisitionStartMode'].value = self.initial_values[10]
-		self.nodes['PtpEnable'].value = self.initial_values[11]
+		self.nodes['AcquisitionStartMode'].value = self.initial_values[9]
+		self.nodes['PtpEnable'].value = self.initial_values[10]
 		
 		Arena_Helper.safe_print("\nCamera: ", self.name,
 			"\nTriggerSelector: ", self.nodes['TriggerSelector'].value,
@@ -95,7 +94,7 @@ class Camera:
 
 	def __set_framerate(self):
 		# Make sure the framerate is such that an exposure can be taken
-		# between two succesive frames
+		# between two successive frames
 		framerate = 0.90 / self.exposure
 
 		# However don't go beyond the camera's maximum frame rate
@@ -219,40 +218,6 @@ def configure_cameras(cameras):
 		camera.dev_serial   =  camera.nodes['DeviceSerialNumber'].value
 		camera.dev_power    = camera.nodes['DevicePower'].value
 		camera.dev_model    = camera.nodes['DeviceModelName'].value
-		
-
-	'''
-		Wait until the PTP connection is established
-		Start Sync Check
-	'''
-
-
-	'''
-	masterfound = False
-	restartSyncCheck = True
-
-	ptpStatus = ""
-
-	while (restartSyncCheck and not masterfound):
-
-		restartSyncCheck = False
-
-		for camera in cameras:
-
-			ptpStatus = camera.nodes['PtpStatus'].value
-
-			if (ptpStatus == "Master"):
-
-				if (masterfound):
-					# There are still multiple masters, continue negotiating
-					restartSyncCheck = True
-
-				masterfound = True
-
-			elif (ptpStatus != "Slave"):
-				# There are still undifined camers
-				restartSyncCheck = True
-	'''
 
 	masterfound = False
 	restartSyncCheck = True
@@ -275,17 +240,6 @@ def configure_cameras(cameras):
 
 	# Notify the user
 	Arena_Helper.safe_print("PTP sync check done!")
-
-	'''
-	for camera in cameras:
-		# Start stream with 25 buffers
-		camera.device.start_stream(camera.buffers)
-
-		trigger_armed = bool(camera.nodemap['TriggerArmed'].value)
-		
-		while trigger_armed is False:
-			trigger_armed = bool(camera.nodemap['TriggerArmed'].value)
-	'''
 
 	for camera in cameras:
 		# Start stream with the number of buffers

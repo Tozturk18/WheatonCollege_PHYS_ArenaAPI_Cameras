@@ -68,8 +68,6 @@ def findCamInDetectedDeviceList (camSrl, detectedDeviceList):
 
 	return devNum[0]
 
-# Below code is disabled because it is no longer used thanks to reading from input.csv
-
 def getArgs(argv=None):
 	descr='Take an image with the PHX050S camera, given \
 		exposure time in seconds, offset in ADUs, and the   \
