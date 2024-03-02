@@ -116,39 +116,46 @@ def get_multiple_image_buffers(camera):
 
 def entry_point():
 
-	thread_list = []
-	devices = Arena_Helper.update_create_devices()
-	
-	cameras, SETTINGS = link_cameras_to_devices(devices)
+	try:
 
-	Camera_Object.configure_cameras(cameras)
+		thread_list = []
+		devices = Arena_Helper.update_create_devices()
+		
+		cameras, SETTINGS = link_cameras_to_devices(devices)
 
-	for INDEX in range(len(SETTINGS['exp'])):
-	
-		config_thread = threading.Thread(target=Camera_Object.change_config, args=(cameras, SETTINGS, INDEX,))
+		Camera_Object.configure_cameras(cameras)
 
+		for INDEX in range(len(SETTINGS['exp'])):
+		
+			config_thread = threading.Thread(target=Camera_Object.change_config, args=(cameras, SETTINGS, INDEX,))
+
+			for camera in cameras:
+				thread = threading.Thread(target=get_multiple_image_buffers, args=(camera,))
+				# Add a thread to the thread list
+				thread_list.append(thread)
+
+			thread_list.append(config_thread)
+
+		# Start each thread in the thread list
+		for thread in thread_list:
+			thread.start()
+
+		# Join each thread in the thread list
+		'''
+		Calling thread is blocked util the thread object on which it was
+			called is terminated.
+		'''
+		for thread in thread_list:
+			thread.join()
+
+		# Restore initial values
 		for camera in cameras:
-			thread = threading.Thread(target=get_multiple_image_buffers, args=(camera,))
-			# Add a thread to the thread list
-			thread_list.append(thread)
-
-		thread_list.append(config_thread)
-
-	# Start each thread in the thread list
-	for thread in thread_list:
-		thread.start()
-
-	# Join each thread in the thread list
-	'''
-	Calling thread is blocked util the thread object on which it was
-		called is terminated.
-	'''
-	for thread in thread_list:
-		thread.join()
-
-	# Restore initial values
-	for camera in cameras:
-		camera.restore_initials()
+			camera.restore_initials()
+		
+	except KeyboardInterrupt:
+		# Restore initial values
+		for camera in cameras:
+			camera.restore_initials()
 
 
 

@@ -18,13 +18,15 @@ def save_image(camera, pdata, height, width, ser):
 
 	#line = ser.readline()
 
-	line = '{"time":' +  f"{time.time_ns()}" + ', "temp": 21.2, "pressure": 1, "humid": 20 }'
+	line = '{"time":' +  f"{time.time()}" + ', "temp": "21.2", "pressure": "1", "humid": "20"}'
 
 	data = json.loads(line)
 
-	t = Time(data["time"], scale='tai')
+	Arena_Helper.safe_print(data)
 
-	#t = Time.now()    # Get the time right after getting the buffer
+	#t = Time(data["time"], scale='tai')
+
+	t = Time.now()    # Get the time right after getting the buffer
 	mjd_now = t.mjd
 	utc_now = t.isot
 
@@ -66,9 +68,9 @@ def save2fits(camera, imgarray, utc_isot, mjd, data, imgtyp='LIGHT'):
 	hdr['OFFSET']   = (camera.offset,     'Black-level offset [ADU]')
 	hdr['GAIN']     = (camera.gain,        'Gain [dB]')
 	hdr['DET-TEMP'] = (camera.nodes['DeviceTemperature'].value,    'Detector temperature [C]')
-	hdr['ENV-TEMP']	= (data["temp"],	'Environmental Temperature [C]'),
-	hdr['ENV-PRES'] = (data["pressure"],	'Environmental Pressure [Pa]'),
-	hdr['ENV-HUMD']	= (data["humidity"],	'Environmental Humidity [%]'),
+	#hdr['ENV-TEMP']	= (int(data["temp"]),	'Environmental Temperature [C]'),
+	#hdr['ENV-PRES'] = (data["pressure"],	'Environmental Pressure [Pa]'),
+	#hdr['ENV-HUMD']	= (data["humidity"],	'Environmental Humidity [%]'),
 	hdr['DEV-PWR']  = (camera.dev_power,      'Device power [Watts]')
 	hdr['DET-SRL']  = (camera.dev_serial,     'Serial number of detector')
 	hdr['DET-MDL']  = (camera.dev_model,      'Model of device')

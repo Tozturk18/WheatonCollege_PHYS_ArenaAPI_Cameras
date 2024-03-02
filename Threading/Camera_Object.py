@@ -146,7 +146,7 @@ class Camera:
 		# Change Gain levels
 		self.nodes['Gain'].value = self.gain
 
-	def __change_config(self, exposure, offset, gain):
+	def _change_config(self, exposure, offset, gain):
 
 		# Stop the stream to edit the camera configuration
 		self.device.stop_stream()
@@ -296,7 +296,7 @@ def configure_cameras(cameras):
 		pass
 
 
-def change_config(cameras, data, index):
+def change_config(cameras, SETTINGS, INDEX):
 
 	cams 	    = SETTINGS[INDEX].cameras
 	exposure 	= SETTINGS[INDEX].exposure
@@ -305,5 +305,7 @@ def change_config(cameras, data, index):
 
 	gen = (camera for camera in cameras if camera.name in cams)
 
+	
 	for camera in gen:
+		Arena_Helper.safe_print(camera.name)
 		camera._change_config(exposure,offset,gain)
