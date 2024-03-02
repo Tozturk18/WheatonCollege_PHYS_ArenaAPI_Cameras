@@ -10,27 +10,19 @@ import time
 
 import json
 
-def save_image(camera, pdata, height, width, ser):
+def save_image(camera, pdata, height, width):
 
 	pdata_as16 = ctypes.cast(pdata, ctypes.POINTER(ctypes.c_ushort))
 
 	nparray_reshaped = np.ctypeslib.as_array(pdata_as16, (height, width))
 
-	#line = ser.readline()
-
-	line = '{"time":' +  f"{time.time_ns()}" + ', "temp": 21.2, "pressure": 1, "humid": 20 }'
-
-	data = json.loads(line)
-
-	t = Time(data["time"], scale='tai')
-
-	#t = Time.now()    # Get the time right after getting the buffer
+	t = Time.now()    # Get the time right after getting the buffer
 	mjd_now = t.mjd
 	utc_now = t.isot
 
-	save2fits(camera, nparray_reshaped, utc_now, mjd_now, data)
+	save2fits(camera, nparray_reshaped, utc_now, mjd_now)
 
-def save2fits(camera, imgarray, utc_isot, mjd, data, imgtyp='LIGHT'):
+def save2fits(camera, imgarray, utc_isot, mjd, imgtyp='LIGHT'):
 	
 	'''
 	The goal is to write the FITS as quickly as possible, so we supply
@@ -66,9 +58,6 @@ def save2fits(camera, imgarray, utc_isot, mjd, data, imgtyp='LIGHT'):
 	hdr['OFFSET']   = (camera.offset,     'Black-level offset [ADU]')
 	hdr['GAIN']     = (camera.gain,        'Gain [dB]')
 	hdr['DET-TEMP'] = (camera.nodes['DeviceTemperature'].value,    'Detector temperature [C]')
-	hdr['ENV-TEMP']	= (data["temp"],	'Environmental Temperature [C]'),
-	hdr['ENV-PRES'] = (data["pressure"],	'Environmental Pressure [Pa]'),
-	hdr['ENV-HUMD']	= (data["humidity"],	'Environmental Humidity [%]'),
 	hdr['DEV-PWR']  = (camera.dev_power,      'Device power [Watts]')
 	hdr['DET-SRL']  = (camera.dev_serial,     'Serial number of detector')
 	hdr['DET-MDL']  = (camera.dev_model,      'Model of device')

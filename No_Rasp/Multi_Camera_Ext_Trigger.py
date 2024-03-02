@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -----------------------------------------------------------------------------
-# File Title: External Triggering and Image Aquisition with Multiple Camera
+# File Title: External Triggering and Image Acquisition with Multiple Camera
 # Author: Ozgur Tuna Ozturk 24', Sayed 25', Prof. Dr. Dipakar Maitra
 # Description: This program uses arena_api to connect to multiple cameras 
 # 	at the same time and take pictures at the same time using external trigger.
-#	This program also buffers the images and slowly gets the images from the camers.
+#	This program also buffers the images and slowly gets the images from the cameras.
 # -----------------------------------------------------------------------------
 
 
@@ -25,20 +25,20 @@ INDEX = 0
 
 '''
 	Take the user input and match them to the devices connected
-	to the computer by mathing serial numbers to r, g, or b
+	to the computer by mating serial numbers to r, g, or b
 '''
 def link_cameras_to_devices(devices):
 
+	# Get the input file name
+	INPUT_FILENAME = Camera_Detection.getArgs()
+
 	# Get camera, set exposure time, offset, gain for the image
-	#cams, myexptime_s, myoffset_adu, mygain_db = Camera_Detection.getArgs()
-	
+	SETTINGS = Parse_CSV.loadSettings(INPUT_FILENAME)
 
-	SETTINGS = Parse_CSV.loadSettings("input.csv")
-
-	cams 			= SETTINGS[INDEX].cameras
-	myexptime_s 	= SETTINGS[INDEX].exposure
-	myoffset_adu 	= SETTINGS[INDEX].offset
-	mygain_db 		= SETTINGS[INDEX].gain
+	cams 		= SETTINGS[INDEX].cameras
+	exposure 	= SETTINGS[INDEX].exposure
+	offset		= SETTINGS[INDEX].offset
+	gain 		= SETTINGS[INDEX].gain
 	
 
 	# Get the devices currently connected to the computer
@@ -57,7 +57,7 @@ def link_cameras_to_devices(devices):
 			# Find which device it belongs to
 			devNum = Camera_Detection.findCamInDetectedDeviceList(camSrl, srlDetected)
 			# Create a new Camera object
-			cameras[i] = Camera_Object.Camera(cam, devices[devNum], myexptime_s, myoffset_adu, mygain_db, NUMBER_OF_BUFFERS)
+			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, NUMBER_OF_BUFFERS)
 
 		# If the user entered the camera names according to numbers
 		elif cam == '0' or cam == '1' or cam == '2':
@@ -68,7 +68,7 @@ def link_cameras_to_devices(devices):
 			# Get the camera name
 			cam = Camera_Detection.serialToCamera(camSrl)
 			# Create a new Camera Object
-			cameras[i] = Camera_Object.Camera(cam, devices[devNum], myexptime_s, myoffset_adu, mygain_db, NUMBER_OF_BUFFERS)
+			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, NUMBER_OF_BUFFERS)
 
 		else:
 			Arena_Helper.safe_print('Ill-defined cam. Quitting...')
@@ -76,7 +76,7 @@ def link_cameras_to_devices(devices):
 
 	return cameras, SETTINGS
 
-def get_multiple_image_buffers(camera, ser):
+def get_multiple_image_buffers(camera):
 	'''
 	This function demonstrates an acquisition on a device
 
@@ -97,7 +97,7 @@ def get_multiple_image_buffers(camera, ser):
 				f'Pixel Format = {buffer.pixel_format.name}')
 
 		''' Save Image '''
-		Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width, ser)
+		Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width)
 		Arena_Helper.safe_print("\nImage Saved\n")
 
 		'''
@@ -106,7 +106,7 @@ def get_multiple_image_buffers(camera, ser):
 		'''
 		camera.device.requeue_buffer(buffer)
 
-def initiate_imaging(cameras, SETTINGS, INDEX, ser):
+def initiate_imaging(cameras, SETTINGS, INDEX):
 
 	for INDEX in range(len(SETTINGS['exp'])):
 	
@@ -114,10 +114,8 @@ def initiate_imaging(cameras, SETTINGS, INDEX, ser):
 
 		Arena_Helper.safe_print("Ready!")
 
-		ser.write('0')
-
 		for camera in cameras:
-			get_multiple_image_buffers(camera, ser)
+			get_multiple_image_buffers(camera)
 
 def restore_initials(cameras):
 
@@ -137,14 +135,9 @@ def entry_point():
 
 	Camera_Object.configure_cameras(cameras)
 
-	# Baud rate is 3M ~ 333.33ns per character
-	ser = serial.Serial('/dev/tty.USB0', 3000000, timeout=0.1)
-
-	initiate_imaging(cameras, SETTINGS, INDEX, ser)
+	initiate_imaging(cameras, SETTINGS, INDEX)
 
 	restore_initials(cameras)
-
-	total_time = time.time_ns() - initial_time
 
 	Arena_Helper.safe_print("Total time: ", total_time)
 
