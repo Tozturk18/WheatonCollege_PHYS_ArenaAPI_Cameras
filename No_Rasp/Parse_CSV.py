@@ -46,6 +46,7 @@ def load_camera_settings(filename: str):
         exposure: float
         offset: int
         gain: float
+        count: int
 
         # Itterate through each row of the CSV file
         for row in reader:

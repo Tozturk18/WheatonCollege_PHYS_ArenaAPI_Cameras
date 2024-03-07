@@ -7,6 +7,7 @@ class CameraSettings(NamedTuple):
     exposure: float
     offset: int
     gain: float 
+    count: int
 
 def load_camera_settings(filename: str):
     """ 
