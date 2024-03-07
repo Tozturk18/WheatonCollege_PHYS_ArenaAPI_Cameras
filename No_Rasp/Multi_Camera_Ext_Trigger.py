@@ -137,6 +137,8 @@ def entry_point():
 
 		Camera_Object.configure_cameras(cameras)
 
+		input("Waiting for user input...")
+
 		initiate_imaging(cameras, SETTINGS, INDEX)
 
 		restore_initials(cameras)
