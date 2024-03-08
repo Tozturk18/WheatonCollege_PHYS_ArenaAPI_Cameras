@@ -44,7 +44,7 @@ class Camera:
 							'PtpEnable', 			'PtpStatus',		'DeviceTemperature', 
 							'AcquisitionFrameRate', 'ExposureTime', 	'BlackLevelRaw', 
 							'Gain', 				'DeviceSerialNumber','DeviceModelName',
-							'DevicePower',			'GevSCPD',			'PTPSyncFrameRate']
+							'DevicePower',			'GevSCPD']
 							)
 
 		# Set some initial values
@@ -62,7 +62,7 @@ class Camera:
 			self.nodes['AcquisitionMode'].value, self.tl_stream_nodemap['StreamBufferHandlingMode'].value,
 			self.tl_stream_nodemap['StreamAutoNegotiatePacketSize'].value, self.tl_stream_nodemap['StreamPacketResendEnable'].value,
 			self.nodes['GevSCPD'].value,
-			self.nodes['AcquisitionStartMode'].value, self.nodes['PtpEnable'].value, self.nodes['PTPSyncFrameRate'].value
+			self.nodes['AcquisitionStartMode'].value, self.nodes['PtpEnable'].value
 			]
 
 	def restore_initials(self):
@@ -80,7 +80,7 @@ class Camera:
 		self.nodes['GevSCPD'].value = self.initial_values[8]
 		self.nodes['AcquisitionStartMode'].value = self.initial_values[9]
 		self.nodes['PtpEnable'].value = self.initial_values[10]
-		self.nodes['PTPSyncFrameRate'].value = self.initial_values[11]
+		
 		
 		Arena_Helper.safe_print("\nCamera: ", self.name,
 			"\nTriggerSelector: ", self.nodes['TriggerSelector'].value,
@@ -93,8 +93,7 @@ class Camera:
 			"\nStreamPacketResendEnable: ", self.tl_stream_nodemap['StreamPacketResendEnable'].value,
 			"\nGevSCPD: ", self.nodes['GevSCPD'].value,
 			"\nAcquisitionStartMode: ", self.nodes['AcquisitionStartMode'].value,
-			"\nPtpEnable: ", self.nodes['PtpEnable'].value,
-			"\nPTPSyncFrameRate: ", self.nodes['PTPSyncFrameRate'].value)
+			"\nPtpEnable: ", self.nodes['PtpEnable'].value)
 
 	def __set_framerate(self):
 		# Make sure the framerate is such that an exposure can be taken
@@ -108,7 +107,7 @@ class Camera:
 
 		# Set camera's framerate
 		self.nodes['AcquisitionFrameRate'].value = framerate
-		self.nodes['PTPSyncFrameRate'].value = framerate
+		
 
 	def __set_exposure(self, exposure):
 
@@ -150,7 +149,7 @@ class Camera:
 		# Change Gain levels
 		self.nodes['Gain'].value = self.gain
 
-	def __change_config(self, exposure, offset, gain):
+	def _change_config(self, exposure, offset, gain):
 
 		# Stop the stream to edit the camera configuration
 		self.device.stop_stream()
@@ -187,7 +186,7 @@ def configure_cameras(cameras):
 
 		# Set acquisition mode to continuous
 		camera.nodes["AcquisitionMode"].value = "Continuous"
-		camera.nodes["AcquisitionStartMode"].value = "PTPSync"
+		camera.nodes["AcquisitionStartMode"].value = "LowLatency"
 
 		# Enable frame rate change, if needed
 		if camera.nodemap['AcquisitionFrameRateEnable'].value is False:
@@ -196,7 +195,7 @@ def configure_cameras(cameras):
 		# Enable external trigger
 		camera.nodes['TriggerSelector'].value = 'FrameStart'
 		camera.nodes['TriggerActivation'].value = 'RisingEdge'
-		camera.nodes['TriggerMode'].value = 'On'
+		camera.nodes['TriggerMode'].value = 'Off'
 		#camera.nodes['TriggerSource'].value = 'Line0'
 		camera.nodes['TriggerSource'].value = 'Software'
 
@@ -254,11 +253,11 @@ def configure_cameras(cameras):
 		camera.device.start_stream(camera.buffers)
 
 	# Wait until all cameras have the trigger armed
-	while any(not bool(camera.nodemap['TriggerArmed'].value) for camera in cameras):
-		pass
+	#while any(not bool(camera.nodemap['TriggerArmed'].value) for camera in cameras):
+	#	pass
 
 
-def change_config(cameras, data, index):
+def change_config(cameras, SETTINGS, INDEX):
 
 	cams 	    = SETTINGS[INDEX].cameras
 	exposure 	= SETTINGS[INDEX].exposure

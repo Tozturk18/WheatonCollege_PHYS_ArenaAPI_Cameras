@@ -33,7 +33,7 @@ def link_cameras_to_devices(devices):
 	INPUT_FILENAME = Camera_Detection.getArgs()
 
 	# Get camera, set exposure time, offset, gain for the image
-	SETTINGS = Parse_CSV.loadSettings(INPUT_FILENAME)
+	SETTINGS = Parse_CSV.load_camera_settings(INPUT_FILENAME)
 
 	cams 		= SETTINGS[INDEX].cameras
 	exposure 	= SETTINGS[INDEX].exposure
@@ -108,7 +108,7 @@ def get_multiple_image_buffers(camera):
 
 def initiate_imaging(cameras, SETTINGS, INDEX):
 
-	for INDEX in range(len(SETTINGS['exp'])):
+	for INDEX in range(len(SETTINGS)):
 	
 		Camera_Object.change_config(cameras, SETTINGS, INDEX)
 
@@ -127,19 +127,30 @@ def restore_initials(cameras):
 
 def entry_point():
 
-	initial_time = time.time_ns()
+	try:
 
-	devices = Arena_Helper.update_create_devices()
-	
-	cameras, SETTINGS = link_cameras_to_devices(devices)
+		initial_time = time.time_ns()
 
-	Camera_Object.configure_cameras(cameras)
+		devices = Arena_Helper.update_create_devices()
+		
+		cameras, SETTINGS = link_cameras_to_devices(devices)
 
-	initiate_imaging(cameras, SETTINGS, INDEX)
+		Camera_Object.configure_cameras(cameras)
 
-	restore_initials(cameras)
+		input("Waiting for user input...")
 
-	Arena_Helper.safe_print("Total time: ", total_time)
+		initiate_imaging(cameras, SETTINGS, INDEX)
+
+		restore_initials(cameras)
+
+		total_time = time.time_ns() - initial_time
+
+		Arena_Helper.safe_print("Total time: ", total_time)
+
+	# Press CTRL+C to end the program early
+	except KeyboardInterrupt:
+		# Restore the cameras to their initials
+		restore_initials(cameras)
 
 if __name__ == "__main__":
 	entry_point()

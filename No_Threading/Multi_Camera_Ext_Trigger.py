@@ -184,6 +184,8 @@ def entry_point():
 		# Baud rate is 3M ~ 333.33ns per character
 		ser = serial.Serial('/dev/ttyUSB0', 3000000, timeout=0.1)
 
+		input("Waiting for User input...")
+
 		# Start imaging
 		initiate_imaging(cameras, SETTINGS, INDEX, ser)
 
