@@ -7,6 +7,7 @@ class CameraSettings(NamedTuple):
     exposure: float
     offset: int
     gain: float 
+    number: int
 
 def load_camera_settings(filename: str):
     """ 
@@ -46,21 +47,35 @@ def load_camera_settings(filename: str):
         exposure: float
         offset: int
         gain: float
+        number: int
 
-        # Itterate through each row of the CSV file
+        # Iterate through each row of the CSV file
         for row in reader:
             cameras = row[:camera_amount]
             for index, column_name in enumerate(header[camera_amount:]):
                 
-                if (column_name == "exp"):
+                if ("exp" in column_name):
                     exposure = float(row[index + camera_amount])
-                elif(column_name == "off"):
+                elif("off" in column_name):
                     offset = int(row[index + camera_amount])
-                elif(column_name == "gain"):
+                elif("gain" in column_name):
                     gain = float(row[index + camera_amount])
+                elif("n_img" in column_name):
+                    number = int(row[index + camera_amount])
                 else:
                     sys.exit(f"Error! {filename} was wrongly formatted. Please check column names!")
 
-            camera_sets.append( CameraSettings(cameras, exposure, offset, gain) )
+            camera_sets.append( CameraSettings(cameras, exposure, offset, gain, number) )
 
     return camera_sets
+
+
+def entry_point():
+
+    settings = load_camera_settings("input.csv")
+
+    print(settings)
+
+    # Start the code
+if __name__ == "__main__":
+	entry_point()
