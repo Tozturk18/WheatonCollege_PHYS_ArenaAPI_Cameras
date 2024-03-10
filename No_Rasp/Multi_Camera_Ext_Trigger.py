@@ -7,21 +7,22 @@
 #	This program also buffers the images and slowly gets the images from the cameras.
 # -----------------------------------------------------------------------------
 
-
+''' --- Imports --- '''
 import Camera_Object
 import Arena_Helper
 import Camera_Detection
 import Save_Image
 import Parse_CSV
-import threading
 import time
-import serial
-
 from arena_api.system import system
+''' --- End of Imports --- '''
 
+''' --- Global Variables --- '''
 # Number of buffers allocated for a device stream
 NUMBER_OF_BUFFERS = 1
+# Current INDEX for the user defined settings to use
 INDEX = 0
+''' --- End of Global Variables --- '''
 
 '''
 	Take the user input and match them to the devices connected
@@ -35,6 +36,7 @@ def link_cameras_to_devices(devices):
 	# Get camera, set exposure time, offset, gain for the image
 	SETTINGS = Parse_CSV.load_camera_settings(INPUT_FILENAME)
 
+	# Load the settings to individual variables for code readability
 	cams 		= SETTINGS[INDEX].cameras
 	exposure 	= SETTINGS[INDEX].exposure
 	offset		= SETTINGS[INDEX].offset

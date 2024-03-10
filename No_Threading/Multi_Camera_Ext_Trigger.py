@@ -14,7 +14,6 @@ import Arena_Helper
 import Camera_Detection
 import Save_Image
 import Parse_CSV
-import threading
 import time
 import serial
 from arena_api.system import system
@@ -47,7 +46,6 @@ def link_cameras_to_devices(devices):
 	offset 		= SETTINGS[INDEX].offset
 	gain 		= SETTINGS[INDEX].gain
 	
-
 	# Get the devices currently connected to the computer
 	devices = Arena_Helper.update_create_devices()
 	# Get the serial numbers of the devices connected
