@@ -126,27 +126,41 @@ def restore_initials(cameras):
 		camera.restore_initials()
 
 def entry_point():
+	'''
+		This function is used as the main of this program.
+		It calls the necessary functions to get the devices, link them to
+		the cameras, set new settings, start imaging and restore the camera
+		settings.
+	'''
 
+	# Try to run the program
 	try:
-
+		# Record the initial start time in nanoseconds
 		initial_time = time.time_ns()
 
+		# List the devices connected to the computer
 		devices = Arena_Helper.update_create_devices()
 		
+		# Get the cameras and the SETTINGS to use from the user
 		cameras, SETTINGS = link_cameras_to_devices(devices)
 
+		# Configure the cameras
 		Camera_Object.configure_cameras(cameras)
 
-		input("Waiting for user input...")
+		input("Waiting for User input...")
 
+		# Start imaging
 		initiate_imaging(cameras, SETTINGS, INDEX)
 
+		# Restore all the camera settings to initials
 		restore_initials(cameras)
 
+		# Calculate the total time this program took
 		total_time = time.time_ns() - initial_time
 
-		Arena_Helper.safe_print("Total time: ", total_time)
-
+		# Print out the total time
+		Arena_Helper.safe_print("\nTotal time: ", total_time)
+	
 	# Press CTRL+C to end the program early
 	except KeyboardInterrupt:
 		# Restore the cameras to their initials

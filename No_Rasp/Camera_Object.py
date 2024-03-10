@@ -38,13 +38,11 @@ class Camera:
 	def get_nodes(self):
 		# Stores the nodes needed for setting up the camera settings
 		self.nodes = self.nodemap.get_node(
-							['TriggerSelector',		'TriggerMode',		'TriggerSource', 
-							'TriggerActivation',	'Width', 			'Height', 
-							'PixelFormat', 			'AcquisitionMode',	'AcquisitionStartMode', 
-							'PtpEnable', 			'PtpStatus',		'DeviceTemperature', 
-							'AcquisitionFrameRate', 'ExposureTime', 	'BlackLevelRaw', 
-							'Gain', 				'DeviceSerialNumber','DeviceModelName',
-							'DevicePower',			'GevSCPD']
+							['TriggerSelector', 'TriggerMode','TriggerSource', 
+							'TriggerActivation','Width', 'Height', 
+							'PixelFormat', 'AcquisitionMode', 'AcquisitionStartMode', 'PtpEnable', 'PtpStatus','DeviceTemperature', 
+							'AcquisitionFrameRate', 'ExposureTime', 'BlackLevelRaw', 
+							'Gain', 'DeviceSerialNumber','DeviceModelName','DevicePower','GevSCPD']
 							)
 
 		# Set some initial values
@@ -81,7 +79,6 @@ class Camera:
 		self.nodes['AcquisitionStartMode'].value = self.initial_values[9]
 		self.nodes['PtpEnable'].value = self.initial_values[10]
 		
-		
 		Arena_Helper.safe_print("\nCamera: ", self.name,
 			"\nTriggerSelector: ", self.nodes['TriggerSelector'].value,
 			"\nTriggerMode: ", self.nodes['TriggerMode'].value,
@@ -107,7 +104,6 @@ class Camera:
 
 		# Set camera's framerate
 		self.nodes['AcquisitionFrameRate'].value = framerate
-		
 
 	def __set_exposure(self, exposure):
 
@@ -154,10 +150,13 @@ class Camera:
 		# Stop the stream to edit the camera configuration
 		self.device.stop_stream()
 		
-		# Set the exposure, offset, and gain
-		self.__set_exposure(exposure)
-		self.__set_offset(offset)
-		self.__set_gain(gain)
+		# Set the exposure, offset, and gain only if they are different then previous
+		if exposure != self.exposure:
+			self.__set_exposure(exposure)
+		if offset != self.offset:
+			self.__set_offset(offset)
+		if gain != self.gain:
+			self.__set_gain(gain)
 		
 		# Notify the user of new camera configuration
 		Arena_Helper.safe_print(
@@ -180,13 +179,12 @@ def configure_cameras(cameras):
 	for cam, camera in enumerate(cameras):
 	
 		print("\n",camera,"\n")
+		# Set acquisition mode to continuous
+		camera.nodes["AcquisitionMode"].value = "Continuous"
+		camera.nodes["AcquisitionStartMode"].value = "Normal"
 
 		# Enable Ptp
 		camera.nodes["PtpEnable"].value = True
-
-		# Set acquisition mode to continuous
-		camera.nodes["AcquisitionMode"].value = "Continuous"
-		camera.nodes["AcquisitionStartMode"].value = "LowLatency"
 
 		# Enable frame rate change, if needed
 		if camera.nodemap['AcquisitionFrameRateEnable'].value is False:
@@ -195,9 +193,8 @@ def configure_cameras(cameras):
 		# Enable external trigger
 		camera.nodes['TriggerSelector'].value = 'FrameStart'
 		camera.nodes['TriggerActivation'].value = 'RisingEdge'
-		camera.nodes['TriggerMode'].value = 'Off'
-		#camera.nodes['TriggerSource'].value = 'Line0'
-		camera.nodes['TriggerSource'].value = 'Software'
+		camera.nodes['TriggerMode'].value = 'On'
+		camera.nodes['TriggerSource'].value = 'Line0'
 
 		''' Setup stream values'''
 
@@ -224,8 +221,7 @@ def configure_cameras(cameras):
 		camera.dev_serial   =  camera.nodes['DeviceSerialNumber'].value
 		camera.dev_power    = camera.nodes['DevicePower'].value
 		camera.dev_model    = camera.nodes['DeviceModelName'].value
-		
-	
+
 	masterfound = False
 	restartSyncCheck = True
 
@@ -253,18 +249,22 @@ def configure_cameras(cameras):
 		camera.device.start_stream(camera.buffers)
 
 	# Wait until all cameras have the trigger armed
-	#while any(not bool(camera.nodemap['TriggerArmed'].value) for camera in cameras):
-	#	pass
+	while any(not bool(camera.nodemap['TriggerArmed'].value) for camera in cameras):
+		pass
 
 
 def change_config(cameras, SETTINGS, INDEX):
 
+	# Get the settings for the current index
 	cams 	    = SETTINGS[INDEX].cameras
 	exposure 	= SETTINGS[INDEX].exposure
 	offset      = SETTINGS[INDEX].offset
 	gain 		= SETTINGS[INDEX].gain
 
+	# Get the cameras that need to be changed
 	gen = (camera for camera in cameras if camera.name in cams)
 
+	# Change the settings for the cameras
 	for camera in gen:
+		Arena_Helper.safe_print(camera.name)
 		camera._change_config(exposure,offset,gain)

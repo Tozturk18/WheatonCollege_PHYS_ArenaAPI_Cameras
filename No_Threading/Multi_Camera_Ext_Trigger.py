@@ -133,16 +133,18 @@ def initiate_imaging(cameras, SETTINGS, INDEX, ser):
 		# Change the camera settings according to the current user defined setting
 		Camera_Object.change_config(cameras, SETTINGS, INDEX)
 
-		# Indicate the cameras are ready for imaging
-		Arena_Helper.safe_print("Ready!")
+		# Repeat imaging for the number of times specified in the CSV file
+		for i in range(SETTINGS[INDEX].n_img):
 
-		# Send a single bit to the Raspberry Pi to trigger the cameras
-		ser.write(b'0')
+			# Indicate the cameras are ready for imaging
+			Arena_Helper.safe_print("Ready!")
+			# Send a single bit to the Raspberry Pi to trigger the cameras
+			ser.write(b'0')
 
-		# Iterate through each camera and get their buffers.
-		for camera in cameras:
-			# Get image buffer from the camera
-			get_multiple_image_buffers(camera, ser)
+			# Iterate through each camera and get their buffers.
+			for camera in cameras:
+				# Get image buffer from the camera
+				get_multiple_image_buffers(camera, ser)
 
 def restore_initials(cameras):
 	'''

@@ -150,10 +150,13 @@ class Camera:
 		# Stop the stream to edit the camera configuration
 		self.device.stop_stream()
 		
-		# Set the exposure, offset, and gain
-		self.__set_exposure(exposure)
-		self.__set_offset(offset)
-		self.__set_gain(gain)
+		# Set the exposure, offset, and gain only if they are different then previous
+		if exposure != self.exposure:
+			self.__set_exposure(exposure)
+		if offset != self.offset:
+			self.__set_offset(offset)
+		if gain != self.gain:
+			self.__set_gain(gain)
 		
 		# Notify the user of new camera configuration
 		Arena_Helper.safe_print(
