@@ -3,7 +3,7 @@ import argparse
 import sys
 
 import Arena_Helper
-import Camera_Object
+#import Camera_Object
 
 # Serial numbers of the cameras, in [r, g, b] order
 rgbSerial = np.array([213301046, 211300110, 223200097])
@@ -67,6 +67,7 @@ def findCamInDetectedDeviceList (camSrl, detectedDeviceList):
 		sys.exit(0)
 
 	return devNum[0]
+
 
 def getArgs(argv=None):
 	descr='Take an image with the PHX050S camera, given \
