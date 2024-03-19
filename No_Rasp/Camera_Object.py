@@ -23,16 +23,35 @@ class Camera:
 		# Save the arena_api camera device
 		self.device = device
 		# Save the picture settings
+		'''
 		self.exposure = exposure
 		self.offset = offset
 		self.gain = gain
+		'''
 		self.buffers = buffers
 		
 		# Pull the nodemaps from device
 		self.nodemap = self.device.nodemap
 		self.tl_stream_nodemap = self.device.tl_stream_nodemap
 
+		# Get the nodes needed for setting up the camera settings
 		self.get_nodes()
+
+		# Set the camera settings
+		# Set the exposure, offset, and gain only if they are different then previous
+		self.__set_exposure(exposure)
+		self.__set_offset(offset)
+		self.__set_gain(gain)
+		
+		# Notify the user of new camera configuration
+		Arena_Helper.safe_print(
+			'\nCamera: ', self.name,
+			'\nImages:', self.nodes['Width'].value, 'x',  self.nodes['Height'].value, self.nodes['PixelFormat'].value,
+			'\nTemperature (C)\t=', self.nodes['DeviceTemperature'].value, 
+			'\nFramerate (Hz) \t=', self.nodes['AcquisitionFrameRate'].value, 
+			'\nExptime (s)    \t=', self.exposure,
+			'\nOffset (ADU)   \t=', self.offset,
+			'\nGain (dB)      \t=', self.gain)
 		
 
 	def get_nodes(self):
@@ -194,7 +213,7 @@ def configure_cameras(cameras):
 		camera.nodes['TriggerSelector'].value = 'FrameStart'
 		camera.nodes['TriggerActivation'].value = 'RisingEdge'
 		camera.nodes['TriggerMode'].value = 'On'
-		camera.nodes['TriggerSource'].value = 'Line0'
+		camera.nodes['TriggerSource'].value = 'Software'
 
 		''' Setup stream values'''
 
@@ -249,9 +268,9 @@ def configure_cameras(cameras):
 		camera.device.start_stream(camera.buffers)
 
 	# Wait until all cameras have the trigger armed
-	while any(not bool(camera.nodemap['TriggerArmed'].value) for camera in cameras):
+	'''while any(not bool(camera.nodemap['TriggerArmed'].value) for camera in cameras):
 		pass
-
+	'''
 
 def change_config(cameras, SETTINGS, INDEX):
 

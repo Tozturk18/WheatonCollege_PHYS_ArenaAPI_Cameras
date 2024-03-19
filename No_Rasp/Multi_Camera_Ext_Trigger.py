@@ -20,8 +20,6 @@ from arena_api.system import system
 ''' --- Global Variables --- '''
 # Number of buffers allocated for a device stream
 NUMBER_OF_BUFFERS = 1
-# Current INDEX for the user defined settings to use
-INDEX = 0
 ''' --- End of Global Variables --- '''
 
 '''
@@ -37,10 +35,10 @@ def link_cameras_to_devices(devices):
 	SETTINGS = Parse_CSV.load_camera_settings(INPUT_FILENAME)
 
 	# Load the settings to individual variables for code readability
-	cams 		= SETTINGS[INDEX].cameras
-	exposure 	= SETTINGS[INDEX].exposure
-	offset		= SETTINGS[INDEX].offset
-	gain 		= SETTINGS[INDEX].gain
+	cams 		= SETTINGS[0].cameras
+	exposure 	= SETTINGS[0].exposure
+	offset		= SETTINGS[0].offset
+	gain 		= SETTINGS[0].gain
 	
 
 	# Get the devices currently connected to the computer
@@ -108,16 +106,18 @@ def get_multiple_image_buffers(camera):
 		'''
 		camera.device.requeue_buffer(buffer)
 
-def initiate_imaging(cameras, SETTINGS, INDEX):
+def initiate_imaging(cameras, SETTINGS):
 
 	for INDEX in range(len(SETTINGS)):
 	
-		Camera_Object.change_config(cameras, SETTINGS, INDEX)
-
-		Arena_Helper.safe_print("Ready!")
-
 		for camera in cameras:
 			get_multiple_image_buffers(camera)
+
+		INDEX = INDEX + 1
+
+		Camera_Object.change_config(cameras, SETTINGS, INDEX)
+
+		#Arena_Helper.safe_print("Ready!")
 
 def restore_initials(cameras):
 
@@ -149,10 +149,10 @@ def entry_point():
 		# Configure the cameras
 		Camera_Object.configure_cameras(cameras)
 
-		input("Waiting for User input...")
+		input("Ready to initiate imaging.\nWaiting for User input...")
 
 		# Start imaging
-		initiate_imaging(cameras, SETTINGS, INDEX)
+		initiate_imaging(cameras, SETTINGS)
 
 		# Restore all the camera settings to initials
 		restore_initials(cameras)
