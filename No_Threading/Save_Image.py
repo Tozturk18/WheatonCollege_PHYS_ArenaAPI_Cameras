@@ -16,11 +16,11 @@ def save_image(camera, pdata, height, width, ser):
 
 	nparray_reshaped = np.ctypeslib.as_array(pdata_as16, (height, width))
 
-	#line = ser.readline()
+	line1 = ser.readline().decode()
 
 	line = '{"time":' +  f"{time.time()}" + ', "temp": "21.2", "pressure": "1", "humid": "20"}'
 
-	data = json.loads(line)
+	data = json.loads(line1)
 
 	Arena_Helper.safe_print(data)
 

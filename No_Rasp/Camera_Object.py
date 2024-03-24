@@ -55,7 +55,8 @@ class Camera:
 			'\nFramerate (Hz) \t=', self.nodes['AcquisitionFrameRate'].value, 
 			'\nExptime (s)    \t=', self.exposure,
 			'\nOffset (ADU)   \t=', self.offset,
-			'\nGain (dB)      \t=', self.gain)
+			'\nGain (dB)      \t=', self.gain,
+			'\nBuffer Number  \t=', self.buffers)
 		
 
 	def get_nodes(self):
@@ -197,7 +198,8 @@ class Camera:
 			'\nFramerate (Hz) \t=', self.nodes['AcquisitionFrameRate'].value, 
 			'\nExptime (s)    \t=', self.exposure,
 			'\nOffset (ADU)   \t=', self.offset,
-			'\nGain (dB)      \t=', self.gain)
+			'\nGain (dB)      \t=', self.gain,
+			'\nBuffer Number  \t=', self.buffers)
 		
 		# Restart the after changing camera configuration
 		self.device.start_stream(self.buffers)

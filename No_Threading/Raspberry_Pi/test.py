@@ -1,5 +1,4 @@
 import serial
-import time
 import sys
 
 # Baud rate is 3M which means 333.33ns per letter
@@ -9,15 +8,12 @@ while True:
 
   text = input("Please enter a text to send: ")
   
-  ser.write(f"{text}\n".encode())
+  ser.write(text.encode())
 
-  if text == "exit":
+  if text == "q":
     ser.close()
     sys.exit("\nThe program ended successfully as requested by the user\n")
 
-  line = ser.readline()
+  line = ser.readline().decode()
 
   print(line)
-
-
-  #time.sleep(1)

@@ -19,13 +19,6 @@ import serial
 from arena_api.system import system
 ''' --- End of Imports --- '''
 
-''' --- Global Variables --- '''
-# Number of buffers allocated for a device stream
-NUMBER_OF_BUFFERS = 1
-# Current INDEX for the user defined settings to use
-INDEX = 0
-''' --- End of Global Variables --- '''
-
 
 def link_cameras_to_devices(devices):
 	'''
@@ -41,10 +34,11 @@ def link_cameras_to_devices(devices):
 	SETTINGS = Parse_CSV.loadSettings(INPUT_FILENAME)
 
 	# Load the settings to individual variables for code readability
-	cams 		= SETTINGS[INDEX].cameras
-	exposure 	= SETTINGS[INDEX].exposure
-	offset 		= SETTINGS[INDEX].offset
-	gain 		= SETTINGS[INDEX].gain
+	cams 		= SETTINGS[0].cameras
+	exposure 	= SETTINGS[0].exposure
+	offset 		= SETTINGS[0].offset
+	gain 		= SETTINGS[0].gain
+	buffer_num	= SETTINGS[0].number
 	
 	# Get the devices currently connected to the computer
 	devices = Arena_Helper.update_create_devices()
@@ -63,7 +57,7 @@ def link_cameras_to_devices(devices):
 			# Find which device it belongs to
 			devNum = Camera_Detection.findCamInDetectedDeviceList(camSrl, srlDetected)
 			# Create a new Camera object
-			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, NUMBER_OF_BUFFERS)
+			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, buffer_num)
 
 		# If the user entered the camera names according to numbers
 		elif cam == '0' or cam == '1' or cam == '2':
@@ -74,7 +68,7 @@ def link_cameras_to_devices(devices):
 			# Get the camera name
 			cam = Camera_Detection.serialToCamera(camSrl)
 			# Create a new Camera Object
-			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, NUMBER_OF_BUFFERS)
+			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, buffer_num)
 
 		else:
 			Arena_Helper.safe_print('Ill-defined cam. Quitting...')
@@ -82,7 +76,7 @@ def link_cameras_to_devices(devices):
 
 	return cameras, SETTINGS
 
-def get_multiple_image_buffers(camera, ser):
+def get_multiple_image_buffers(camera, count, ser):
 	'''
 		This function gets the image buffer(s) from a camera and saves them
 		by calling the save_image() function
@@ -91,29 +85,27 @@ def get_multiple_image_buffers(camera, ser):
 		:param ser: This is the serial port object to use for communication with Raspberry Pi
 	'''
 
-	# Iterate through each buffer
-	for count in range(NUMBER_OF_BUFFERS):
 
-		# Get the current buffer
-		buffer = camera.device.get_buffer()
+	# Get the current buffer
+	buffer = camera.device.get_buffer()
 
-		# Printout buffer info
-		Arena_Helper.safe_print(
-				f'\tbuffer{count:{2}} received | '
-				f'Width = {buffer.width} pxl, '
-				f'Height = {buffer.height} pxl, '
-				f'Pixel Format = {buffer.pixel_format.name}')
+	# Printout buffer info
+	Arena_Helper.safe_print(
+			f'\tbuffer{count:{2}} received | '
+			f'Width = {buffer.width} pxl, '
+			f'Height = {buffer.height} pxl, '
+			f'Pixel Format = {buffer.pixel_format.name}')
 
-		# Save the buffer as a FITS image
-		Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width, ser)
+	# Save the buffer as a FITS image
+	Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width, ser)
 
-		# Indicate to the user that the FITS image is saved
-		Arena_Helper.safe_print("\nImage Saved\n")
+	# Indicate to the user that the FITS image is saved
+	Arena_Helper.safe_print("\nImage Saved\n")
 
-		# Requeue the buffer
-		camera.device.requeue_buffer(buffer)
+	# Requeue the buffer
+	camera.device.requeue_buffer(buffer)
 
-def initiate_imaging(cameras, SETTINGS, INDEX, ser):
+def initiate_imaging(cameras, SETTINGS, ser):
 	'''
 		This function start the imaging process by going through
 		each of the user defined settings and taking a simultaneous pics
@@ -126,13 +118,10 @@ def initiate_imaging(cameras, SETTINGS, INDEX, ser):
 	'''
 
 	# Iterate through each user defined setting
-	for INDEX in range(len(SETTINGS)):
+	for INDEX in range(len(SETTINGS)-1):
 	
-		# Change the camera settings according to the current user defined setting
-		Camera_Object.change_config(cameras, SETTINGS, INDEX)
-
 		# Repeat imaging for the number of times specified in the CSV file
-		for i in range(SETTINGS[INDEX].n_img):
+		for count in range(SETTINGS[INDEX].number):
 
 			# Indicate the cameras are ready for imaging
 			Arena_Helper.safe_print("Ready!")
@@ -142,7 +131,17 @@ def initiate_imaging(cameras, SETTINGS, INDEX, ser):
 			# Iterate through each camera and get their buffers.
 			for camera in cameras:
 				# Get image buffer from the camera
-				get_multiple_image_buffers(camera, ser)
+				get_multiple_image_buffers(camera, count, ser)
+
+		INDEX = INDEX + 1
+
+		# Change the camera settings according to the current user defined setting
+		Camera_Object.change_config(cameras, SETTINGS, INDEX)
+
+	# Iterate through each camera and get their buffers.
+	for camera in cameras:
+		# Get image buffer from the camera
+		get_multiple_image_buffers(camera, count, ser)
 
 def restore_initials(cameras):
 	'''
@@ -168,8 +167,7 @@ def entry_point():
 
 	# Try to run the program
 	try:
-		# Record the initial start time in nanoseconds
-		initial_time = time.time_ns()
+
 
 		# List the devices connected to the computer
 		devices = Arena_Helper.update_create_devices()
@@ -184,10 +182,13 @@ def entry_point():
 		# Baud rate is 3M ~ 333.33ns per character
 		ser = serial.Serial('/dev/ttyUSB0', 3000000, timeout=0.1)
 
-		input("Waiting for User input...")
+		input("Ready to initiate imaging.\nWaiting for User input...")
+
+		# Record the initial start time in nanoseconds
+		initial_time = time.time_ns()
 
 		# Start imaging
-		initiate_imaging(cameras, SETTINGS, INDEX, ser)
+		initiate_imaging(cameras, SETTINGS, ser)
 
 		# Restore all the camera settings to initials
 		restore_initials(cameras)

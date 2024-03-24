@@ -17,11 +17,6 @@ import time
 from arena_api.system import system
 ''' --- End of Imports --- '''
 
-''' --- Global Variables --- '''
-# Number of buffers allocated for a device stream
-NUMBER_OF_BUFFERS = 1
-''' --- End of Global Variables --- '''
-
 '''
 	Take the user input and match them to the devices connected
 	to the computer by mating serial numbers to r, g, or b
@@ -76,7 +71,7 @@ def link_cameras_to_devices(devices):
 
 	return cameras, SETTINGS
 
-def get_multiple_image_buffers(camera):
+def get_multiple_image_buffers(camera,count):
 	'''
 	This function demonstrates an acquisition on a device
 
@@ -85,43 +80,36 @@ def get_multiple_image_buffers(camera):
 	(3) Requeue each buffer
 	'''
 
-	# Print image buffer info
-	for count in range(NUMBER_OF_BUFFERS):
+	# Print image buffer information
+	buffer = camera.device.get_buffer()
 
-		buffer = camera.device.get_buffer()
+	Arena_Helper.safe_print(
+		f'\tbuffer{count:{2}} received | '
+		f'Width = {buffer.width} pxl, '
+		f'Height = {buffer.height} pxl, '
+		f'Pixel Format = {buffer.pixel_format.name}')
 
-		Arena_Helper.safe_print(
-				f'\tbuffer{count:{2}} received | '
-				f'Width = {buffer.width} pxl, '
-				f'Height = {buffer.height} pxl, '
-				f'Pixel Format = {buffer.pixel_format.name}')
+	''' Save Image '''
+	Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width)
+	Arena_Helper.safe_print("\nImage Saved\n")
 
-		''' Save Image '''
-		Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width)
-		Arena_Helper.safe_print("\nImage Saved\n")
-
-		'''
-		`Device.requeue_buffer()` takes a buffer or many buffers in a list or
-		tuple
-		'''
-		camera.device.requeue_buffer(buffer)
+	''' takes a buffer or many buffers in a list or tuple '''
+	camera.device.requeue_buffer(buffer)
 
 def initiate_imaging(cameras, SETTINGS):
 
 	for INDEX in range(len(SETTINGS)-1):
 	
-		for i in range(SETTINGS[INDEX].number):
+		for count in range(SETTINGS[INDEX].number):
 			for camera in cameras:
-				get_multiple_image_buffers(camera)
+				get_multiple_image_buffers(camera,count)
 
 		INDEX = INDEX + 1
 
 		Camera_Object.change_config(cameras, SETTINGS, INDEX)
 	
 	for camera in cameras:
-			get_multiple_image_buffers(camera)
-
-		#Arena_Helper.safe_print("Ready!")
+		get_multiple_image_buffers(camera)
 
 def restore_initials(cameras):
 
