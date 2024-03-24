@@ -39,7 +39,7 @@ def link_cameras_to_devices(devices):
 	exposure 	= SETTINGS[0].exposure
 	offset		= SETTINGS[0].offset
 	gain 		= SETTINGS[0].gain
-	
+	buffer_num	= SETTINGS[0].number
 
 	# Get the devices currently connected to the computer
 	devices = Arena_Helper.update_create_devices()
@@ -57,7 +57,7 @@ def link_cameras_to_devices(devices):
 			# Find which device it belongs to
 			devNum = Camera_Detection.findCamInDetectedDeviceList(camSrl, srlDetected)
 			# Create a new Camera object
-			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, NUMBER_OF_BUFFERS)
+			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, buffer_num)
 
 		# If the user entered the camera names according to numbers
 		elif cam == '0' or cam == '1' or cam == '2':
@@ -68,7 +68,7 @@ def link_cameras_to_devices(devices):
 			# Get the camera name
 			cam = Camera_Detection.serialToCamera(camSrl)
 			# Create a new Camera Object
-			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, NUMBER_OF_BUFFERS)
+			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, buffer_num)
 
 		else:
 			Arena_Helper.safe_print('Ill-defined cam. Quitting...')
@@ -110,12 +110,16 @@ def initiate_imaging(cameras, SETTINGS):
 
 	for INDEX in range(len(SETTINGS)-1):
 	
-		for camera in cameras:
-			get_multiple_image_buffers(camera)
+		for i in range(SETTINGS[INDEX].number):
+			for camera in cameras:
+				get_multiple_image_buffers(camera)
 
 		INDEX = INDEX + 1
 
 		Camera_Object.change_config(cameras, SETTINGS, INDEX)
+	
+	for camera in cameras:
+			get_multiple_image_buffers(camera)
 
 		#Arena_Helper.safe_print("Ready!")
 

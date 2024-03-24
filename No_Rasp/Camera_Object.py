@@ -65,7 +65,7 @@ class Camera:
 							'TriggerActivation','Width', 'Height', 
 							'PixelFormat', 'AcquisitionMode', 'AcquisitionStartMode', 'PtpEnable', 'PtpStatus','DeviceTemperature', 
 							'AcquisitionFrameRate', 'ExposureTime', 'BlackLevelRaw', 
-							'Gain', 'DeviceSerialNumber','DeviceModelName','DevicePower','GevSCPD']
+							'Gain', 'DeviceSerialNumber','DeviceModelName','DevicePower','GevSCPD', 'DeviceStreamChannelPacketSize']
 							)
 
 		# Set some initial values
@@ -83,7 +83,8 @@ class Camera:
 			self.nodes['AcquisitionMode'].value, self.tl_stream_nodemap['StreamBufferHandlingMode'].value,
 			self.tl_stream_nodemap['StreamAutoNegotiatePacketSize'].value, self.tl_stream_nodemap['StreamPacketResendEnable'].value,
 			self.nodes['GevSCPD'].value,
-			self.nodes['AcquisitionStartMode'].value, self.nodes['PtpEnable'].value
+			self.nodes['AcquisitionStartMode'].value, self.nodes['PtpEnable'].value,
+			self.nodes['DeviceStreamChannelPacketSize'].value
 			]
 
 	def restore_initials(self):
@@ -101,6 +102,7 @@ class Camera:
 		self.nodes['GevSCPD'].value = self.initial_values[8]
 		self.nodes['AcquisitionStartMode'].value = self.initial_values[9]
 		self.nodes['PtpEnable'].value = self.initial_values[10]
+		self.nodes['DeviceStreamChannelPacketSize'].value = self.initial_values[11]
 		
 		Arena_Helper.safe_print("\nCamera: ", self.name,
 			"\nTriggerSelector: ", self.nodes['TriggerSelector'].value,
@@ -113,7 +115,8 @@ class Camera:
 			"\nStreamPacketResendEnable: ", self.tl_stream_nodemap['StreamPacketResendEnable'].value,
 			"\nGevSCPD: ", self.nodes['GevSCPD'].value,
 			"\nAcquisitionStartMode: ", self.nodes['AcquisitionStartMode'].value,
-			"\nPtpEnable: ", self.nodes['PtpEnable'].value)
+			"\nPtpEnable: ", self.nodes['PtpEnable'].value,
+			"\nDeviceStreamChannelPacketSize: ", self.nodes['DeviceStreamChannelPacketSize'].value)
 
 	def __set_framerate(self):
 		# Make sure the framerate is such that an exposure can be taken
@@ -168,19 +171,23 @@ class Camera:
 		# Change Gain levels
 		self.nodes['Gain'].value = self.gain
 
-	def _change_config(self, exposure, offset, gain):
+	def _change_config(self, exposure, offset, gain, buffer_num):
 
 		# Stop the stream to edit the camera configuration
 		self.device.stop_stream()
 		
 		# Set the exposure, offset, and gain only if they are different then previous
 		if exposure != self.exposure:
-			print("Hello")
+			Arena_Helper.safe_print("changing exposure!")
 			self.__set_exposure(exposure)
 		if offset != self.offset:
+			Arena_Helper.safe_print("changing offset!")
 			self.__set_offset(offset)
 		if gain != self.gain:
+			Arena_Helper.safe_print("changing gain!")
 			self.__set_gain(gain)
+		
+		self.buffers = buffer_num
 		
 		# Notify the user of new camera configuration
 		Arena_Helper.safe_print(
@@ -226,6 +233,8 @@ def configure_cameras(cameras):
 		camera.tl_stream_nodemap['StreamAutoNegotiatePacketSize'].value = True
 		# Enable stream packet resend
 		camera.tl_stream_nodemap['StreamPacketResendEnable'].value = True
+
+		camera.nodes['DeviceStreamChannelPacketSize'].value = camera.nodes['DeviceStreamChannelPacketSize'].max
 		
 		total		= len(cameras)
 		packetSize	= 10000		# Bytes
@@ -283,6 +292,7 @@ def change_config(cameras, SETTINGS, INDEX):
 	exposure 	= SETTINGS[INDEX].exposure
 	offset      = SETTINGS[INDEX].offset
 	gain 		= SETTINGS[INDEX].gain
+	buffer_num	= SETTINGS[INDEX].number
 
 	# Get the cameras that need to be changed
 	gen = (camera for camera in cameras if camera.name in cams)
@@ -290,4 +300,4 @@ def change_config(cameras, SETTINGS, INDEX):
 	# Change the settings for the cameras
 	for camera in gen:
 		Arena_Helper.safe_print(camera.name)
-		camera._change_config(exposure,offset,gain)
+		camera._change_config(exposure,offset,gain,buffer_num)
