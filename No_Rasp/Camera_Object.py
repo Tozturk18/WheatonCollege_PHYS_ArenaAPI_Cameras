@@ -37,6 +37,10 @@ class Camera:
 		# Get the nodes needed for setting up the camera settings
 		self.get_nodes()
 
+		# Enable frame rate change, if needed
+		if self.nodemap['AcquisitionFrameRateEnable'].value is False:
+			self.nodemap['AcquisitionFrameRateEnable'].value = True
+
 		# Set the camera settings
 		# Set the exposure, offset, and gain only if they are different then previous
 		self.__set_exposure(exposure)
@@ -171,6 +175,7 @@ class Camera:
 		
 		# Set the exposure, offset, and gain only if they are different then previous
 		if exposure != self.exposure:
+			print("Hello")
 			self.__set_exposure(exposure)
 		if offset != self.offset:
 			self.__set_offset(offset)
@@ -205,14 +210,12 @@ def configure_cameras(cameras):
 		# Enable Ptp
 		camera.nodes["PtpEnable"].value = True
 
-		# Enable frame rate change, if needed
-		if camera.nodemap['AcquisitionFrameRateEnable'].value is False:
-			camera.nodemap['AcquisitionFrameRateEnable'].value = True
+		
 		
 		# Enable external trigger
 		camera.nodes['TriggerSelector'].value = 'FrameStart'
 		camera.nodes['TriggerActivation'].value = 'RisingEdge'
-		camera.nodes['TriggerMode'].value = 'On'
+		camera.nodes['TriggerMode'].value = 'Off'
 		camera.nodes['TriggerSource'].value = 'Software'
 
 		''' Setup stream values'''
@@ -225,7 +228,7 @@ def configure_cameras(cameras):
 		camera.tl_stream_nodemap['StreamPacketResendEnable'].value = True
 		
 		total		= len(cameras)
-		packetSize	= 9014		# Bytes
+		packetSize	= 10000		# Bytes
 		devLink		= 125000000	# 1 Gbps
 		a_buffer	= 0.1093	# 10.93%
 		delay = packetSize * (10**9)/devLink
@@ -268,7 +271,8 @@ def configure_cameras(cameras):
 		camera.device.start_stream(camera.buffers)
 
 	# Wait until all cameras have the trigger armed
-	'''while any(not bool(camera.nodemap['TriggerArmed'].value) for camera in cameras):
+	'''
+	while any(not bool(camera.nodemap['TriggerArmed'].value) for camera in cameras):
 		pass
 	'''
 

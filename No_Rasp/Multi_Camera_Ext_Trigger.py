@@ -108,7 +108,7 @@ def get_multiple_image_buffers(camera):
 
 def initiate_imaging(cameras, SETTINGS):
 
-	for INDEX in range(len(SETTINGS)):
+	for INDEX in range(len(SETTINGS)-1):
 	
 		for camera in cameras:
 			get_multiple_image_buffers(camera)
@@ -137,9 +137,6 @@ def entry_point():
 
 	# Try to run the program
 	try:
-		# Record the initial start time in nanoseconds
-		initial_time = time.time_ns()
-
 		# List the devices connected to the computer
 		devices = Arena_Helper.update_create_devices()
 		
@@ -151,6 +148,9 @@ def entry_point():
 
 		input("Ready to initiate imaging.\nWaiting for User input...")
 
+		# Record the initial start time in nanoseconds
+		initial_time = time.time_ns()
+
 		# Start imaging
 		initiate_imaging(cameras, SETTINGS)
 
@@ -161,7 +161,7 @@ def entry_point():
 		total_time = time.time_ns() - initial_time
 
 		# Print out the total time
-		Arena_Helper.safe_print("\nTotal time: ", total_time)
+		Arena_Helper.safe_print("\nTotal time: ", total_time/6e10)
 	
 	# Press CTRL+C to end the program early
 	except KeyboardInterrupt:
