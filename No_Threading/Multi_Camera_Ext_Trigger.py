@@ -89,25 +89,23 @@ def get_multiple_image_buffers(camera, count, data):
 	print("getting buffer")
 
 	# Get the current buffer
-	buffers = camera.device.get_buffer(count)
+	buffer = camera.device.get_buffer()
 
-	for i, buffer in enumerate(buffers):
+	# Printout buffer info
+	print(
+			f'\tbuffer{count:{2}} received | '
+			f'Width = {buffer.width} pxl, '
+			f'Height = {buffer.height} pxl, '
+			f'Pixel Format = {buffer.pixel_format.name}')
 
-		# Printout buffer info
-		print(
-				f'\tbuffer{i:{2}} / {count} received | '
-				f'Width = {buffer.width} pxl, '
-				f'Height = {buffer.height} pxl, '
-				f'Pixel Format = {buffer.pixel_format.name}')
+	# Save the buffer as a FITS image
+	Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width, data)
 
-		# Save the buffer as a FITS image
-		Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width, data)
-
-		# Indicate to the user that the FITS image is saved
-		print("\nImage Saved\n")
+	# Indicate to the user that the FITS image is saved
+	print("\nImage Saved\n")
 
 	# Requeue the buffer
-	camera.device.requeue_buffer(buffers)
+	camera.device.requeue_buffer(buffer)
 
 def initiate_imaging(cameras, SETTINGS, ser):
 	'''
@@ -123,27 +121,9 @@ def initiate_imaging(cameras, SETTINGS, ser):
 
 	# Iterate through each user defined setting
 	for INDEX in range(len(SETTINGS)):
-
-		count = SETTINGS[INDEX].number
-
-		# Indicate the cameras are ready for imaging
-		print("Ready!")
-		# Send a single bit to the Raspberry Pi to trigger the cameras
-		ser.write(b'0')
-
-		rasp_output = ser.readline().decode()
-		
-		data = json.loads(rasp_output)
-
-		
-
-		# Iterate through each camera and get their buffers.
-		for camera in cameras:
-			# Get image buffer from the camera
-			get_multiple_image_buffers(camera, count, data)
 	
 		# Repeat imaging for the number of times specified in the CSV file
-		'''for count in range(SETTINGS[INDEX].number):
+		for count in range(SETTINGS[INDEX].number):
 
 			# Indicate the cameras are ready for imaging
 			print("Ready!")
@@ -159,7 +139,7 @@ def initiate_imaging(cameras, SETTINGS, ser):
 			# Iterate through each camera and get their buffers.
 			for camera in cameras:
 				# Get image buffer from the camera
-				get_multiple_image_buffers(camera, count, data)'''
+				get_multiple_image_buffers(camera, count, data)
 
 		INDEX = INDEX + 1
 
