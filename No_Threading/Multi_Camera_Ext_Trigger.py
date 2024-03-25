@@ -86,6 +86,7 @@ def get_multiple_image_buffers(camera, count, data):
 		:param ser: This is the serial port object to use for communication with Raspberry Pi
 	'''
 
+	print("getting buffer")
 
 	# Get the current buffer
 	buffer = camera.device.get_buffer()
