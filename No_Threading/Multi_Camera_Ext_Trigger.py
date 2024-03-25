@@ -86,6 +86,7 @@ def get_multiple_image_buffers(camera, count, data):
 		:param ser: This is the serial port object to use for communication with Raspberry Pi
 	'''
 
+	print("getting buffer")
 
 	# Get the current buffer
 	buffer = camera.device.get_buffer()
@@ -133,7 +134,7 @@ def initiate_imaging(cameras, SETTINGS, ser):
 
 			data = json.loads(rasp_output)
 
-			print(data)
+			print(f"Buffer count: {count+1} / {SETTINGS[INDEX].number}")
 
 			# Iterate through each camera and get their buffers.
 			for camera in cameras:
@@ -155,6 +156,8 @@ def initiate_imaging(cameras, SETTINGS, ser):
 	rasp_output = ser.readline().decode()
 
 	data = json.loads(rasp_output)
+
+	print(f"Buffer count: {count+1} / {SETTINGS[INDEX].number}")
 
 	# Iterate through each camera and get their buffers.
 	for camera in cameras:
