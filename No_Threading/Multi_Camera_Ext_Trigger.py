@@ -118,15 +118,11 @@ def initiate_imaging(cameras, SETTINGS, ser):
 		:param ser: This is the serial port object to use for communication with Raspberry Pi
 	'''
 
-	count = 0
-
 	# Iterate through each user defined setting
-	for INDEX in range(len(SETTINGS)-1):
+	for INDEX in range(len(SETTINGS)):
 	
 		# Repeat imaging for the number of times specified in the CSV file
-		for i in range(SETTINGS[INDEX].number):
-
-			count = i
+		for count in range(SETTINGS[INDEX].number):
 
 			# Indicate the cameras are ready for imaging
 			print("Ready!")
@@ -148,7 +144,7 @@ def initiate_imaging(cameras, SETTINGS, ser):
 
 		# Change the camera settings according to the current user defined setting
 		Camera_Object.change_config(cameras, SETTINGS, INDEX)
-
+	'''
 	count = count + 1
 
 	# Indicate the cameras are ready for imaging
@@ -163,7 +159,7 @@ def initiate_imaging(cameras, SETTINGS, ser):
 	# Iterate through each camera and get their buffers.
 	for camera in cameras:
 		# Get image buffer from the camera
-		get_multiple_image_buffers(camera, count, data)
+		get_multiple_image_buffers(camera, count, data)'''
 
 def restore_initials(cameras):
 	'''
