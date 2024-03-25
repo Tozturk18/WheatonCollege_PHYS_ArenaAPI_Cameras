@@ -279,7 +279,7 @@ def configure_cameras(cameras):
 
 	for camera in cameras:
 		# Start stream with the number of buffers
-		camera.device.start_stream(camera.buffers)
+		camera.device.start_stream()
 
 	# Wait until all cameras have the trigger armed
 	'''
