@@ -139,6 +139,8 @@ def initiate_imaging(cameras, SETTINGS, ser):
 
 			print(data)
 
+			print(count)
+
 			# Iterate through each camera and get their buffers.
 			for camera in cameras:
 				# Get image buffer from the camera

@@ -175,7 +175,7 @@ class Camera:
 	def _change_config(self, exposure, offset, gain, buffer_num):
 
 		# Stop the stream to edit the camera configuration
-		self.device.stop_stream()
+		#self.device.stop_stream()
 		
 		# Set the exposure, offset, and gain only if they are different then previous
 		if exposure != self.exposure:
@@ -202,7 +202,7 @@ class Camera:
 			'\nBuffer Number  \t=', self.buffers)
 		
 		# Restart the after changing camera configuration
-		self.device.start_stream(self.buffers)
+		#self.device.start_stream(self.buffers)
 
 
 def configure_cameras(cameras):
