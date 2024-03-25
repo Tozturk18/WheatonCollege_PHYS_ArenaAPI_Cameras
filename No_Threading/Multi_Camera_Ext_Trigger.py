@@ -219,7 +219,7 @@ def entry_point():
 		total_time = time.time_ns() - initial_time
 
 		# Print out the total time
-		print("\nTotal time: ", total_time)
+		print("\nTotal time: ", total_time/6e10)
 	
 	# Press CTRL+C to end the program early
 	except KeyboardInterrupt:
