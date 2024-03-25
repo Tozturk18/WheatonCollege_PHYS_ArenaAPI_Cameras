@@ -98,9 +98,14 @@ def get_multiple_image_buffers(camera,count):
 
 def initiate_imaging(cameras, SETTINGS):
 
+	count = 0
+
 	for INDEX in range(len(SETTINGS)-1):
 	
-		for count in range(SETTINGS[INDEX].number):
+		for i in range(SETTINGS[INDEX].number):
+
+			count = i
+
 			for camera in cameras:
 				get_multiple_image_buffers(camera,count)
 
@@ -108,8 +113,10 @@ def initiate_imaging(cameras, SETTINGS):
 
 		Camera_Object.change_config(cameras, SETTINGS, INDEX)
 	
+	count = count + 1
+
 	for camera in cameras:
-		get_multiple_image_buffers(camera)
+		get_multiple_image_buffers(camera,count)
 
 def restore_initials(cameras):
 
