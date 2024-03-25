@@ -27,7 +27,6 @@ def save_image(camera, pdata, height, width, data):
 	print(f'UTC: {t.isot}')
 	print(f'MJD: {t.mjd}')
 
-	t = Time.now()    # Get the time right after getting the buffer
 	mjd_now = t.mjd
 	utc_now = t.isot
 
