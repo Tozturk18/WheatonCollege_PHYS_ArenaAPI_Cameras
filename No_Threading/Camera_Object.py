@@ -45,7 +45,7 @@ class Camera:
 		self.__set_gain(gain)
 		
 		# Notify the user of new camera configuration
-		Arena_Helper.safe_print(
+		print(
 			'\nCamera: ', self.name,
 			'\nImages:', self.nodes['Width'].value, 'x',  self.nodes['Height'].value, self.nodes['PixelFormat'].value,
 			'\nTemperature (C)\t=', self.nodes['DeviceTemperature'].value, 
@@ -101,7 +101,7 @@ class Camera:
 		self.nodes['PtpEnable'].value = self.initial_values[10]
 		self.nodes['DeviceStreamChannelPacketSize'].value = self.initial_values[11]
 		
-		Arena_Helper.safe_print("\nCamera: ", self.name,
+		print("\nCamera: ", self.name,
 			"\nTriggerSelector: ", self.nodes['TriggerSelector'].value,
 			"\nTriggerMode: ", self.nodes['TriggerMode'].value,
 			"\nTriggerSource: ", self.nodes['TriggerSource'].value,
@@ -175,19 +175,19 @@ class Camera:
 		
 		# Set the exposure, offset, and gain only if they are different then previous
 		if exposure != self.exposure:
-			Arena_Helper.safe_print("changing exposure!")
+			print("changing exposure!")
 			self.__set_exposure(exposure)
 		if offset != self.offset:
-			Arena_Helper.safe_print("changing offset!")
+			print("changing offset!")
 			self.__set_offset(offset)
 		if gain != self.gain:
-			Arena_Helper.safe_print("changing gain!")
+			print("changing gain!")
 			self.__set_gain(gain)
 		
 		self.buffers = buffer_num
 		
 		# Notify the user of new camera configuration
-		Arena_Helper.safe_print(
+		print(
 			'\nCamera: ', self.name,
 			'\nImages:', self.nodes['Width'].value, 'x',  self.nodes['Height'].value, self.nodes['PixelFormat'].value,
 			'\nTemperature (C)\t=', self.nodes['DeviceTemperature'].value, 
@@ -243,7 +243,7 @@ def configure_cameras(cameras):
 		
 		camera.nodes['GevSCPD'].value = int( math.ceil( delay * (total - 1) / 10000) * 10000 )
 		
-		Arena_Helper.safe_print('GevSCPD: ', camera.nodes['GevSCPD'].value)
+		print('GevSCPD: ', camera.nodes['GevSCPD'].value)
 
 		# store camera values
 		camera.dev_serial   =  camera.nodes['DeviceSerialNumber'].value
@@ -270,7 +270,7 @@ def configure_cameras(cameras):
 			restartSyncCheck = True
 
 	# Notify the user
-	Arena_Helper.safe_print("PTP sync check done!")
+	print("PTP sync check done!")
 
 	for camera in cameras:
 		# Start stream with the number of buffers
@@ -293,5 +293,5 @@ def change_config(cameras, SETTINGS, INDEX):
 
 	
 	for camera in gen:
-		Arena_Helper.safe_print(camera.name)
+		print(camera.name)
 		camera._change_config(exposure,offset,gain,buffer_num)

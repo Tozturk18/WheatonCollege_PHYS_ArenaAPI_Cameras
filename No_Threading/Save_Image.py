@@ -20,7 +20,7 @@ def save_image(camera, pdata, height, width, ser):
 
 	print(line1)
 
-	line = '{"time":' +  f"{time.time()}" + ', "temp": "21.2", "pressure": "1", "humid": "20"}'
+	line = '{"time": "' +  f"{time.time()}" + '", "temp": "21.2", "pressure": "1", "humid": "20"}'
 
 	print(line)
 
@@ -41,7 +41,7 @@ def save2fits(camera, imgarray, utc_isot, mjd, data, imgtyp='LIGHT'):
 	both UTC and MJD of observation.
 	'''
 		
-	Arena_Helper.safe_print(f'Saving Image')
+	print(f'Saving Image')
 		
 	#The chip name is figured out from dev_model
 	if camera.dev_model == "PHX050S-P":

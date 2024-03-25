@@ -71,7 +71,7 @@ def link_cameras_to_devices(devices):
 			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, buffer_num)
 
 		else:
-			Arena_Helper.safe_print('Ill-defined cam. Quitting...')
+			print('Ill-defined cam. Quitting...')
 			sys.exit(0)
 
 	return cameras, SETTINGS
@@ -90,7 +90,7 @@ def get_multiple_image_buffers(camera, count, ser):
 	buffer = camera.device.get_buffer()
 
 	# Printout buffer info
-	Arena_Helper.safe_print(
+	print(
 			f'\tbuffer{count:{2}} received | '
 			f'Width = {buffer.width} pxl, '
 			f'Height = {buffer.height} pxl, '
@@ -100,7 +100,7 @@ def get_multiple_image_buffers(camera, count, ser):
 	Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width, ser)
 
 	# Indicate to the user that the FITS image is saved
-	Arena_Helper.safe_print("\nImage Saved\n")
+	print("\nImage Saved\n")
 
 	# Requeue the buffer
 	camera.device.requeue_buffer(buffer)
@@ -124,7 +124,7 @@ def initiate_imaging(cameras, SETTINGS, ser):
 		for count in range(SETTINGS[INDEX].number):
 
 			# Indicate the cameras are ready for imaging
-			Arena_Helper.safe_print("Ready!")
+			print("Ready!")
 			# Send a single bit to the Raspberry Pi to trigger the cameras
 			ser.write(b'0')
 
@@ -151,7 +151,7 @@ def restore_initials(cameras):
 	'''
 
 	# Print out message to the user
-	Arena_Helper.safe_print("\nRestoring Configuration to Initials...\n")
+	print("\nRestoring Configuration to Initials...\n")
 
 	# Restore initial values
 	for camera in cameras:
@@ -197,7 +197,7 @@ def entry_point():
 		total_time = time.time_ns() - initial_time
 
 		# Print out the total time
-		Arena_Helper.safe_print("\nTotal time: ", total_time)
+		print("\nTotal time: ", total_time)
 	
 	# Press CTRL+C to end the program early
 	except KeyboardInterrupt:
