@@ -31,7 +31,7 @@ def link_cameras_to_devices(devices):
 	INPUT_FILENAME = Camera_Detection.getArgs()
 
 	# Get camera, set exposure time, offset, gain for the image
-	SETTINGS = Parse_CSV.loadSettings(INPUT_FILENAME)
+	SETTINGS = Parse_CSV.load_camera_settings(INPUT_FILENAME)
 
 	# Load the settings to individual variables for code readability
 	cams 		= SETTINGS[0].cameras
