@@ -40,9 +40,9 @@ try:
                 ser.write(line.encode())
                 print(line)
                 GPIO.output(5, GPIO.HIGH)  # Turn on pin 5
-                time.sleep(0.01)   # Wait for 10 milliseconds
+                time.sleep(0.001)   # Wait for 10 milliseconds
                 GPIO.output(5, GPIO.LOW)  # Turn off pin 5
-                time.sleep(0.01)   # Wait for 10 milliseconds
+                time.sleep(0.001)   # Wait for 10 milliseconds
 
 
 except KeyboardInterrupt:
