@@ -17,6 +17,7 @@ import Parse_CSV
 import time
 import serial
 from arena_api.system import system
+import json
 ''' --- End of Imports --- '''
 
 
@@ -76,7 +77,7 @@ def link_cameras_to_devices(devices):
 
 	return cameras, SETTINGS
 
-def get_multiple_image_buffers(camera, count, ser):
+def get_multiple_image_buffers(camera, count, data):
 	'''
 		This function gets the image buffer(s) from a camera and saves them
 		by calling the save_image() function
@@ -97,7 +98,7 @@ def get_multiple_image_buffers(camera, count, ser):
 			f'Pixel Format = {buffer.pixel_format.name}')
 
 	# Save the buffer as a FITS image
-	Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width, ser)
+	Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width, data)
 
 	# Indicate to the user that the FITS image is saved
 	print("\nImage Saved\n")
@@ -132,10 +133,16 @@ def initiate_imaging(cameras, SETTINGS, ser):
 			# Send a single bit to the Raspberry Pi to trigger the cameras
 			ser.write(b'0')
 
+			rasp_output = ser.readline().decode()
+
+			data = json.loads(rasp_output)
+
+			print(data)
+
 			# Iterate through each camera and get their buffers.
 			for camera in cameras:
 				# Get image buffer from the camera
-				get_multiple_image_buffers(camera, count, ser)
+				get_multiple_image_buffers(camera, count, data)
 
 		INDEX = INDEX + 1
 
@@ -144,10 +151,19 @@ def initiate_imaging(cameras, SETTINGS, ser):
 
 	count = count + 1
 
+	# Indicate the cameras are ready for imaging
+	print("Ready!")
+	# Send a single bit to the Raspberry Pi to trigger the cameras
+	ser.write(b'0')
+
+	rasp_output = ser.readline().decode()
+
+	data = json.loads(rasp_output)
+
 	# Iterate through each camera and get their buffers.
 	for camera in cameras:
 		# Get image buffer from the camera
-		get_multiple_image_buffers(camera, count, ser)
+		get_multiple_image_buffers(camera, count, data)
 
 def restore_initials(cameras):
 	'''

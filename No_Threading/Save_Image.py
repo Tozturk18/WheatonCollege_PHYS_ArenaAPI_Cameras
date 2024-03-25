@@ -10,21 +10,17 @@ import time
 
 import json
 
-def save_image(camera, pdata, height, width, ser):
+def save_image(camera, pdata, height, width, data):
 
 	pdata_as16 = ctypes.cast(pdata, ctypes.POINTER(ctypes.c_ushort))
 
 	nparray_reshaped = np.ctypeslib.as_array(pdata_as16, (height, width))
 
-	line1 = ser.readline().decode()
+	#line = '{"time": "' +  f"{time.time()}" + '", "temp": "21.2", "pressure": "1", "humid": "20"}'
 
-	print(line1)
+	#print(line)
 
-	line = '{"time": "' +  f"{time.time()}" + '", "temp": "21.2", "pressure": "1", "humid": "20"}'
-
-	print(line)
-
-	data = json.loads(line)
+	#data = json.loads(line)
 
 	#t = Time(data["time"], scale='tai')
 
