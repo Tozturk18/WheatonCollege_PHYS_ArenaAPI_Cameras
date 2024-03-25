@@ -138,7 +138,7 @@ def initiate_imaging(cameras, SETTINGS, ser):
 
 			data = json.loads(rasp_output)
 
-			print(f"Buffer count: {count} / {SETTINGS[INDEX].number}")
+			print(f"Buffer count: {count+1} / {SETTINGS[INDEX].number}")
 
 			# Iterate through each camera and get their buffers.
 			for camera in cameras:
@@ -160,6 +160,8 @@ def initiate_imaging(cameras, SETTINGS, ser):
 	rasp_output = ser.readline().decode()
 
 	data = json.loads(rasp_output)
+
+	print(f"Buffer count: {count+1} / {SETTINGS[INDEX].number}")
 
 	# Iterate through each camera and get their buffers.
 	for camera in cameras:
