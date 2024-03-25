@@ -66,7 +66,7 @@ def link_cameras_to_devices(devices):
 			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, buffer_num)
 
 		else:
-			Arena_Helper.safe_print('Ill-defined cam. Quitting...')
+			print('Ill-defined cam. Quitting...')
 			sys.exit(0)
 
 	return cameras, SETTINGS
@@ -83,7 +83,7 @@ def get_multiple_image_buffers(camera,count):
 	# Print image buffer information
 	buffer = camera.device.get_buffer()
 
-	Arena_Helper.safe_print(
+	print(
 		f'\tbuffer{count:{2}} received | '
 		f'Width = {buffer.width} pxl, '
 		f'Height = {buffer.height} pxl, '
@@ -91,7 +91,7 @@ def get_multiple_image_buffers(camera,count):
 
 	''' Save Image '''
 	Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width)
-	Arena_Helper.safe_print("\nImage Saved\n")
+	print("\nImage Saved\n")
 
 	''' takes a buffer or many buffers in a list or tuple '''
 	camera.device.requeue_buffer(buffer)
@@ -113,7 +113,7 @@ def initiate_imaging(cameras, SETTINGS):
 
 def restore_initials(cameras):
 
-	Arena_Helper.safe_print("\nRestoring Configuration to Initials...\n")
+	print("\nRestoring Configuration to Initials...\n")
 
 	# Restore initial values
 	for camera in cameras:
@@ -153,7 +153,7 @@ def entry_point():
 		total_time = time.time_ns() - initial_time
 
 		# Print out the total time
-		Arena_Helper.safe_print("\nTotal time: ", total_time/6e10)
+		print("\nTotal time: ", total_time/6e10)
 	
 	# Press CTRL+C to end the program early
 	except KeyboardInterrupt:

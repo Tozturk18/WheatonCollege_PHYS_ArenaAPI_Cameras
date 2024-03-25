@@ -29,7 +29,7 @@ def save2fits(camera, imgarray, utc_isot, mjd, imgtyp='LIGHT'):
 	both UTC and MJD of observation.
 	'''
 		
-	Arena_Helper.safe_print(f'Saving Image')
+	print(f'Saving Image')
 		
 	#The chip name is figured out from dev_model
 	if camera.dev_model == "PHX050S-P":

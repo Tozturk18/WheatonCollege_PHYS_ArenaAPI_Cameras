@@ -29,7 +29,7 @@ def cameraToSerial(camName: str):
 	elif camName == 'b':
 		serial = rgbSerial[2]
 	else:
-		Arena_Helper.safe_print('This should not happen. Quitting')
+		print('This should not happen. Quitting')
 		sys.exit(0)
 
 	return serial
@@ -44,7 +44,7 @@ def serialToCamera(serial: int):
 	elif serial == rgbSerial[2]:
 		name = 'b'
 	else:
-		Arena_Helper.safe_print('This should not happen. Quitting')
+		print('This should not happen. Quitting')
 		sys.exit(0)
 
 	return name
@@ -60,10 +60,10 @@ def findCamInDetectedDeviceList (camSrl, detectedDeviceList):
 
 	# A couple of sanity checks
 	if len(devNum) == 0:
-		Arena_Helper.safe_print('Specified camera not detected. Quitting...')
+		print('Specified camera not detected. Quitting...')
 		sys.exit(0)
 	if len(devNum)  > 1:
-		Arena_Helper.safe_print('Multiple cameras with same serial. Quitting...')
+		print('Multiple cameras with same serial. Quitting...')
 		sys.exit(0)
 
 	return devNum[0]
