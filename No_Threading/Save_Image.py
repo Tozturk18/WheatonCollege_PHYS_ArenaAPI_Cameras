@@ -20,11 +20,11 @@ def save_image(camera, pdata, height, width, ser):
 
 	print(line1)
 
-	#line = '{"time":' +  f"{time.time()}" + ', "temp": "21.2", "pressure": "1", "humid": "20"}'
+	line = '{"time":' +  f"{time.time()}" + ', "temp": "21.2", "pressure": "1", "humid": "20"}'
 
-	#data = json.loads(line1)
+	print(line)
 
-	#Arena_Helper.safe_print(data)
+	data = json.loads(line)
 
 	#t = Time(data["time"], scale='tai')
 
