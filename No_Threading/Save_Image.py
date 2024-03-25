@@ -22,7 +22,7 @@ def save_image(camera, pdata, height, width, data):
 
 	#data = json.loads(line)
 
-	t = Time(data["time"], scale='tai')
+	t = Time(data["time"], format='unix_tai')
 
 	print(f'UTC: {t.isot}')
 	print(f'MJD: {t.mjd}')
