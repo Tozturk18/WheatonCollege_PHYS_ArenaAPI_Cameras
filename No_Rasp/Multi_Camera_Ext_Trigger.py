@@ -98,25 +98,25 @@ def get_multiple_image_buffers(camera,count):
 
 def initiate_imaging(cameras, SETTINGS):
 
-	count = 0
+	# Iterate through each user defined setting
+	for INDEX in range(len(SETTINGS)):
 
-	for INDEX in range(len(SETTINGS)-1):
+		if INDEX > 0:
+			# Change the camera settings according to the current user defined setting
+			Camera_Object.change_config(cameras, SETTINGS, INDEX)
 	
-		for i in range(SETTINGS[INDEX].number):
+		# Repeat imaging for the number of times specified in the CSV file
+		for count in range(SETTINGS[INDEX].number):
 
-			count = i
+			# Indicate the cameras are ready for imaging
+			print("Ready!")
 
+			print(f"Buffer count: {count+1} / {SETTINGS[INDEX].number}")
+
+			# Iterate through each camera and get their buffers.
 			for camera in cameras:
-				get_multiple_image_buffers(camera,count)
-
-		INDEX = INDEX + 1
-
-		Camera_Object.change_config(cameras, SETTINGS, INDEX)
-	
-	count = count + 1
-
-	for camera in cameras:
-		get_multiple_image_buffers(camera,count)
+				# Get image buffer from the camera
+				get_multiple_image_buffers(camera, count)
 
 def restore_initials(cameras):
 

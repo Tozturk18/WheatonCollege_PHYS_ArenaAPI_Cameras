@@ -188,7 +188,7 @@ class Camera:
 			print("changing gain!")
 			self.__set_gain(gain)
 		
-		self.buffers = buffer_num
+		#self.buffers = buffer_num
 		
 		# Notify the user of new camera configuration
 		print(
@@ -202,7 +202,7 @@ class Camera:
 			'\nBuffer Number  \t=', self.buffers)
 		
 		# Restart the after changing camera configuration
-		#self.device.start_stream(self.buffers)
+		#self.device.start_stream()
 
 
 def configure_cameras(cameras):
