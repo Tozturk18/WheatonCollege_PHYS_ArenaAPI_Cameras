@@ -11,8 +11,13 @@
 # THE SOFTWARE.
 # -----------------------------------------------------------------------------
 
-import time
+import Camera_Object
+import Arena_Helper
+import Camera_Detection
 import Save_Image
+import Parse_CSV
+import time
+import sys
 from arena_api.system import system
 from arena_api.buffer import BufferFactory
 
@@ -33,73 +38,68 @@ Exposure: For High Dynamic Range
 TAB1 = "  "
 TAB2 = "    "
 num_images = 1
-exposure_high = 100000.0
+exposure_h = 100000.0
 #exposure_high = 0.001 * 1e6
-exposure_mid = 50000.0
-exposure_low = 25000.0
+exposure_m = 50000.0
+exposure_l = 25000.0
 
 
-def create_devices_with_tries():
-	'''
-	Waits for the user to connect a device before raising an
-		exception if it fails
-	'''
-	tries = 0
-	tries_max = 6
-	sleep_time_secs = 10
-	devices = None
-	while tries < tries_max:  # Wait for device for 60 seconds
-		devices = system.create_device()
-		if not devices:
-			print(
-				f'Try {tries+1} of {tries_max}: waiting for {sleep_time_secs} '
-				f'secs for a device to be connected!')
-			for sec_count in range(sleep_time_secs):
-				time.sleep(1)
-				print(f'{sec_count + 1 } seconds passed ',
-					'.' * sec_count, end='\r')
-			tries += 1
+'''
+	Take the user input and match them to the devices connected
+	to the computer by mating serial numbers to r, g, or b
+'''
+def link_cameras_to_devices(devices):
+
+	# Get the input file name
+	INPUT_FILENAME = Camera_Detection.getArgs()
+
+	# Get camera, set exposure time, offset, gain for the image
+	SETTINGS = Parse_CSV.load_camera_settings(INPUT_FILENAME)
+
+	# Load the settings to individual variables for code readability
+	cams 		= SETTINGS[0].cameras
+	exposure 	= SETTINGS[0].exposure
+	offset		= SETTINGS[0].offset
+	gain 		= SETTINGS[0].gain
+	buffer_num	= SETTINGS[0].number
+
+	# Get the devices currently connected to the computer
+	devices = Arena_Helper.update_create_devices()
+	# Get the serial numbers of the devices connected
+	srlDetected = Camera_Detection.getSerial(devices)
+
+	cameras = [None] * len(cams)
+
+	# Go through each device and determine the camera
+	for i, cam in enumerate(cams):
+		# If the user entered the camera names according to colors
+		if cam == 'r' or cam == 'g' or cam == 'b':
+			# Get the camera serial number for the selected cam for device detection
+			camSrl = Camera_Detection.cameraToSerial(cam)
+			# Find which device it belongs to
+			devNum = Camera_Detection.findCamInDetectedDeviceList(camSrl, srlDetected)
+			# Create a new Camera object
+			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, buffer_num)
+
+		# If the user entered the camera names according to numbers
+		elif cam == '0' or cam == '1' or cam == '2':
+			# Get the device number
+			devNum = int(cam)
+			# Find which camera it belongs to
+			camSrl = srlDetected[devNum]
+			# Get the camera name
+			cam = Camera_Detection.serialToCamera(camSrl)
+			# Create a new Camera Object
+			cameras[i] = Camera_Object.Camera(cam, devices[devNum], exposure, offset, gain, buffer_num)
+
 		else:
-			return devices
-	else:
-		raise Exception(f'No device found! Please connect a device and run '
-						f'the example again.')
+			print('Ill-defined cam. Quitting...')
+			sys.exit(0)
+
+	return cameras, SETTINGS
 
 
-def store_initial(nodemap):
-	'''
-	Store initial node values, return their values at the end
-	'''
-	nodes = nodemap.get_node(['TriggerMode', 'TriggerSource',
-							'TriggerSelector', 'TriggerSoftware',
-							'TriggerArmed', 'ExposureAuto', 'ExposureTime'])
-
-	trigger_mode_initial = nodes['TriggerMode'].value
-	trigger_source_initial = nodes['TriggerSource'].value
-	trigger_selector_initial = nodes['TriggerSelector'].value
-	exposure_auto_initial = nodes['ExposureAuto'].value
-	exposure_time_initial = nodes['ExposureTime'].value
-
-	return nodes, [exposure_time_initial, exposure_auto_initial,
-				trigger_selector_initial, trigger_source_initial,
-				trigger_mode_initial]
-
-
-def trigger_software_once_armed(nodes):
-	'''
-	Continually check until trigger is armed. Once the trigger is armed,
-		it is ready to be executed.
-	'''
-	trigger_armed = False
-
-	while (trigger_armed is False):
-		trigger_armed = bool(nodes['TriggerArmed'].value)
-
-	# retrieve and execute software trigger node
-	nodes['TriggerSoftware'].execute()
-
-
-def acquire_hdr_images(device, nodes, initial_vals):
+def acquire_hdr_images(cameras, SETTINGS):
 	'''
 	demonstrates exposure configuration and acquisition for HDR imaging
 	(1) Sets trigger mode
@@ -114,26 +114,6 @@ def acquire_hdr_images(device, nodes, initial_vals):
 	(10) Does NOT process copied images
 	(11) Cleans up copied images
 	'''
-	'''
-	Prepare trigger mode
-		Enable trigger mode before starting the stream. This example uses the
-		trigger to control the moment that images are taken. This ensures the
-		exposure time of each image in a way that a continuous stream might have
-		trouble with.
-	'''
-	print(f"{TAB1}Prepare trigger mode")
-	nodes['TriggerSelector'].value = "FrameStart"
-	nodes['TriggerMode'].value = "On"
-	nodes['TriggerSource'].value = "Software"
-
-	'''
-	Disable automatic exposure
-		Disable automatic exposure before starting the stream. The HDR images in
-		this example require three images of varied exposures, which need to be
-		set manually.
-	'''
-	print(f"{TAB1}Disable auto exposure")
-	nodes['ExposureAuto'].value = 'Off'
 
 	'''
 	Get exposure time and software trigger nodes
@@ -141,45 +121,15 @@ def acquire_hdr_images(device, nodes, initial_vals):
 		order to check for existance, readability, and writability only once
 		before the stream.
 	'''
-	print(f"{TAB1}Get exposure time and trigger software nodes")
-
-	if nodes['ExposureTime'] is None or nodes['TriggerSoftware'] is None:
-		raise Exception("ExposureTime or TriggerSoftware node not found")
-
-	if (nodes['ExposureTime'].is_writable is False
-	or nodes['TriggerSoftware'].is_writable is False):
-		raise Exception("ExposureTime or TriggerSoftware node not writable")
-
-	'''
-	If largest exposure times is not within the exposure time range, set
-		largest exposure time to max value and set the remaining exposure times
-		to half the value of the state before
-	'''
-	if (exposure_high > nodes['ExposureTime'].max
-	or exposure_low < nodes['ExposureTime'].min):
-
-		exposure_h = nodes['ExposureTime'].max
-		exposure_m = exposure_h / 2
-		exposure_l = exposure_m / 2
-	else:
-		exposure_h = exposure_high
-		exposure_m = exposure_h / 2
-		exposure_l = exposure_m / 2
-
 	'''
 	Setup stream values
 	'''
-	tl_stream_nodemap = device.tl_stream_nodemap
-	tl_stream_nodemap['StreamAutoNegotiatePacketSize'].value = True
-	tl_stream_nodemap['StreamPacketResendEnable'].value = True
 
-	# Store HDR images for processing
-	hdr_images = []
+	for camera in cameras:
 
-	print(f"{TAB1}Acquire {num_images} HDR images")
-	device.start_stream()
+		camera.device.start_stream()
 
-	for i in range(0, num_images):
+	#for i in range(0, num_images):
 		'''
 		Get high, medium, and low exposure images
 			This example grabs three examples of varying exposures for later
@@ -192,38 +142,44 @@ def acquire_hdr_images(device, nodes, initial_vals):
 		print(f'{TAB2}Getting HDR image {i}')
 
 		# High exposure time
-		nodes['ExposureTime'].value = exposure_h
-		trigger_software_once_armed(nodes)
-		image_pre_high = device.get_buffer()
-		trigger_software_once_armed(nodes)
-		image_high = device.get_buffer()
+		camera.nodes['ExposureTime'].value = exposure_h
+		#trigger_software_once_armed(nodes)
+		image_pre_high = camera.device.get_buffer()
+		#trigger_software_once_armed(nodes)
+		image_high = camera.device.get_buffer()
 
-		print(f"{TAB1}{TAB2}Image High Exposure {nodes['ExposureTime'].value}")
+	print(f"{TAB1}{TAB2}Image High Exposure {camera.nodes['ExposureTime'].value /  1e6}")
+
+	for camera in cameras:
 
 		# Medium exposure time
-		nodes['ExposureTime'].value = exposure_m
-		trigger_software_once_armed(nodes)
-		image_pre_mid = device.get_buffer()
-		trigger_software_once_armed(nodes)
-		image_mid = device.get_buffer()
+		camera.nodes['ExposureTime'].value = exposure_m
+		#trigger_software_once_armed(nodes)
+		image_pre_mid = camera.device.get_buffer()
+		#trigger_software_once_armed(nodes)
+		image_mid = camera.device.get_buffer()
 
-		print(f"{TAB1}{TAB2}Image Mid Exposure {nodes['ExposureTime'].value}")
+	print(f"{TAB1}{TAB2}Image Mid Exposure {camera.nodes['ExposureTime'].value / 1e6}")
+
+	for camera in cameras:
 
 		# Low exposure time
-		nodes['ExposureTime'].value = exposure_l
-		trigger_software_once_armed(nodes)
-		image_pre_low = device.get_buffer()
-		trigger_software_once_armed(nodes)
-		image_low = device.get_buffer()
+		camera.nodes['ExposureTime'].value = exposure_l
+		#trigger_software_once_armed(nodes)
+		image_pre_low = camera.device.get_buffer()
+		#trigger_software_once_armed(nodes)
+		image_low = camera.device.get_buffer()
 
-		print(f"{TAB1}{TAB2}Image Low Exposure {nodes['ExposureTime'].value}")
+	print(f"{TAB1}{TAB2}Image Low Exposure {camera.nodes['ExposureTime'].value / 1e6}")
 
-		'''
+	'''
 		Copy images for processing later
-			Use the image factory to copy the images for later processing. Images
-			are copied in order to requeue buffers to allow for more images to be
-			retrieved from the device.
-		'''
+		Use the image factory to copy the images for later processing. Images
+		are copied in order to requeue buffers to allow for more images to be
+		retrieved from the device.
+	'''
+
+	'''
 		print(f"{TAB2}Copy images for HDR processing later")
 
 		i_high = BufferFactory.copy(image_high)
@@ -232,56 +188,68 @@ def acquire_hdr_images(device, nodes, initial_vals):
 		hdr_images.append(i_mid)
 		i_low = BufferFactory.copy(image_low)
 		hdr_images.append(i_low)
+	'''
 		
-		Save_Image.save_image(image_pre_high.pdata, image_pre_high.height, image_pre_high.width)
-		Save_Image.save_image(image_high.pdata, image_high.height, image_high.width)
-		Save_Image.save_image(image_pre_mid.pdata, image_pre_mid.height, image_pre_mid.width)
-		Save_Image.save_image(image_mid.pdata, image_mid.height, image_mid.width)
-		Save_Image.save_image(image_pre_low.pdata, image_pre_low.height, image_pre_low.width)
-		Save_Image.save_image(image_low.pdata, image_low.height, image_low.width)
+	Save_Image.save_image(image_pre_high.pdata, image_pre_high.height, image_pre_high.width)
+	Save_Image.save_image(image_high.pdata, image_high.height, image_high.width)
+	Save_Image.save_image(image_pre_mid.pdata, image_pre_mid.height, image_pre_mid.width)
+	Save_Image.save_image(image_mid.pdata, image_mid.height, image_mid.width)
+	Save_Image.save_image(image_pre_low.pdata, image_pre_low.height, image_pre_low.width)
+	Save_Image.save_image(image_low.pdata, image_low.height, image_low.width)
 
+	for camera in cameras:
 		# Requeue buffers
-		device.requeue_buffer(image_pre_high)
-		device.requeue_buffer(image_high)
-		device.requeue_buffer(image_pre_mid)
-		device.requeue_buffer(image_mid)
-		device.requeue_buffer(image_pre_low)
-		device.requeue_buffer(image_low)
+		camera.device.requeue_buffer(image_pre_high)
+		camera.device.requeue_buffer(image_high)
+		camera.device.requeue_buffer(image_pre_mid)
+		camera.device.requeue_buffer(image_mid)
+		camera.device.requeue_buffer(image_pre_low)
+		camera.device.requeue_buffer(image_low)
 
-	device.stop_stream()
+		camera.device.stop_stream()
 
-	'''
-	Run HDR processing
-		Once the images have been retrieved and copied, they can be processed
-		into an HDR image. HDR algorithms
-	'''
-	print(f"{TAB1}Run HDR processing")
+def restore_initials(cameras):
 
-	# Destroy copied images after processing to prevent memory leaks
-	for i in range(0, hdr_images.__len__()):
-		BufferFactory.destroy(hdr_images[i])
+	print("\nRestoring Configuration to Initials...\n")
 
-	'''
-	Return nodes to initial values
-	'''
-	nodes['ExposureTime'].value = initial_vals[0]
-	nodes['ExposureAuto'].value = initial_vals[1]
-	nodes['TriggerSelector'].value = initial_vals[2]
-	nodes['TriggerSource'].value = initial_vals[3]
-	nodes['TriggerMode'].value = initial_vals[4]
+	# Restore initial values
+	for camera in cameras:
+		camera.restore_initials()
 
 
 def example_entry_point():
 
-	devices = create_devices_with_tries()
-	device = devices[0]
+	# Try to run the program
+	try:
+		# List the devices connected to the computer
+		devices = Arena_Helper.update_create_devices()
+		
+		# Get the cameras and the SETTINGS to use from the user
+		cameras, SETTINGS = link_cameras_to_devices(devices)
 
-	nodemap = device.nodemap
-	nodes, initial_vals = store_initial(nodemap)
+		# Configure the cameras
+		Camera_Object.configure_cameras(cameras)
 
-	acquire_hdr_images(device, nodes, initial_vals)
+		input("Ready to initiate imaging.\nWaiting for User input...")
 
-	system.destroy_device(device)
+		# Record the initial start time in nanoseconds
+		initial_time = time.time_ns()
+
+		acquire_hdr_images(cameras, SETTINGS)
+
+		# Calculate the total time this program took
+		total_time = time.time_ns() - initial_time
+
+		# Restore all the camera settings to initials
+		restore_initials(cameras)
+
+		# Print out the total time
+		print("\nTotal time: ", total_time/6e10)
+
+	# Press CTRL+C to end the program early
+	except KeyboardInterrupt:
+		# Restore the cameras to their initials
+		restore_initials(cameras)
 
 
 if __name__ == "__main__":

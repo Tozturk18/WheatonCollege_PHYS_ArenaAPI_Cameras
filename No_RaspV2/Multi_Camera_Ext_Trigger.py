@@ -14,6 +14,7 @@ import Camera_Detection
 import Save_Image
 import Parse_CSV
 import time
+import sys
 from arena_api.system import system
 ''' --- End of Imports --- '''
 
