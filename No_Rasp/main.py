@@ -90,13 +90,13 @@ def acquire_hdr_images(cameras, SETTINGS, cam_buffer):
 
 		if INDEX > 0:
 			Camera_Object.change_config(cameras,SETTINGS,INDEX)
-
-		for count in range(SETTINGS[INDEX].number):
-			print(f"Buffer count: {count+1} / {SETTINGS[INDEX].number}")
-
 			trig(cameras)
 			for camera in cameras:
 				camera.device.get_buffer()
+
+		for count in range(SETTINGS[INDEX].number):
+			print(f"Buffer count: {count+1} / {SETTINGS[INDEX].number}")
+			
 			trig(cameras)
 			for camera in cameras:
 				buffer = camera.device.get_buffer()
@@ -106,7 +106,7 @@ def acquire_hdr_images(cameras, SETTINGS, cam_buffer):
 					f'Height = {buffer.height} pxl, '
 					f'Pixel Format = {buffer.pixel_format.name}')
 				cam_buffer[camera].append(buffer)
-
+			
 	return cam_buffer
 
 def restore_initials(cameras):
@@ -136,7 +136,7 @@ def example_entry_point():
 		cameras, SETTINGS = link_cameras_to_devices(devices)
 
 		# Configure the cameras
-		Camera_Object.configure_cameras(cameras)
+		Camera_Object.configure_cameras(cameras, SETTINGS)
 
 		cam_buffer = {}
 		for camera in cameras:

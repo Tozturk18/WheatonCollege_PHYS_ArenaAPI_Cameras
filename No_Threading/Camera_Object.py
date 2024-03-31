@@ -201,7 +201,7 @@ class Camera:
 		#self.device.start_stream(self.buffers)
 
 
-def configure_cameras(cameras):
+def configure_cameras(cameras, SETTINGS):
 	''' Configure all the necessary settings for imaging '''
 
 	# Iterate through each camera
@@ -272,9 +272,16 @@ def configure_cameras(cameras):
 	# Notify the user
 	print("PTP sync check done!")
 
+	total_buff = 0
+
+	for setting in SETTINGS:
+		total_buff = total_buff + setting.number
+
+	total_buff = total_buff + len(SETTINGS) + 1
+
 	for camera in cameras:
 		# Start stream with the number of buffers
-		camera.device.start_stream()
+		camera.device.start_stream(total_buff)
 
 	# Wait until all cameras have the trigger armed
 	while any(not bool(camera.nodemap['TriggerArmed'].value) for camera in cameras):
