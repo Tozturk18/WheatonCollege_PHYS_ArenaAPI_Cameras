@@ -54,6 +54,7 @@ class Camera:
 			'\nTemperature (C)\t=', self.nodes['DeviceTemperature'].value, 
 			'\nFramerate (Hz) \t=', self.nodes['AcquisitionFrameRate'].value, 
 			'\nExptime (s)    \t=', self.exposure,
+			'\nExptime (s)	  \t=', self.nodes['ExposureTime'].value / 1e6,
 			'\nOffset (ADU)   \t=', self.offset,
 			'\nGain (dB)      \t=', self.gain,
 			'\nBuffer Number  \t=', self.buffers)
@@ -188,7 +189,7 @@ class Camera:
 			print("changing gain!")
 			self.__set_gain(gain)
 		
-		#self.buffers = buffer_num
+		self.buffers = buffer_num
 		
 		# Notify the user of new camera configuration
 		print(
@@ -197,12 +198,13 @@ class Camera:
 			'\nTemperature (C)\t=', self.nodes['DeviceTemperature'].value, 
 			'\nFramerate (Hz) \t=', self.nodes['AcquisitionFrameRate'].value, 
 			'\nExptime (s)    \t=', self.exposure,
+			'\nExptime (s)	  \t=', self.nodes['ExposureTime'].value / 1e6,
 			'\nOffset (ADU)   \t=', self.offset,
 			'\nGain (dB)      \t=', self.gain,
 			'\nBuffer Number  \t=', self.buffers)
 		
 		# Restart the after changing camera configuration
-		#self.device.start_stream()
+		#self.device.start_stream(self.buffers)
 
 
 def configure_cameras(cameras):
@@ -224,7 +226,7 @@ def configure_cameras(cameras):
 		# Enable external trigger
 		camera.nodes['TriggerSelector'].value = 'FrameStart'
 		camera.nodes['TriggerActivation'].value = 'RisingEdge'
-		camera.nodes['TriggerMode'].value = 'Off'
+		camera.nodes['TriggerMode'].value = 'On'
 		camera.nodes['TriggerSource'].value = 'Software'
 
 		''' Setup stream values'''

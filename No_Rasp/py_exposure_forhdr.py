@@ -37,11 +37,15 @@ Exposure: For High Dynamic Range
 '''
 TAB1 = "  "
 TAB2 = "    "
-num_images = 1
-exposure_h = 100000.0
-#exposure_high = 0.001 * 1e6
-exposure_m = 50000.0
-exposure_l = 25000.0
+#num_images = 1
+#exposure_h = 100000.0
+#exposure_m = 50000.0
+#exposure_l = 25000.0
+
+
+exposure_h = 0.01 * 1e6
+exposure_m = 0.005 * 1e6
+exposure_l = 0.001 * 1e6
 
 
 '''
@@ -98,6 +102,14 @@ def link_cameras_to_devices(devices):
 
 	return cameras, SETTINGS
 
+def trig(cameras):
+	while any(not bool(camera.nodemap['TriggerArmed'].value) for camera in cameras):
+		pass
+
+	for camera in cameras:
+		# retrieve and execute software trigger node
+		camera.nodemap['TriggerSoftware'].execute()
+
 
 def acquire_hdr_images(cameras, SETTINGS):
 	'''
@@ -124,10 +136,17 @@ def acquire_hdr_images(cameras, SETTINGS):
 	'''
 	Setup stream values
 	'''
+	
+	image_pre_high	= []
+	image_high	= []
+	image_pre_mid	= []
+	image_mid	= []
+	image_pre_low	= []
+	image_low	= []
 
 	for camera in cameras:
 
-		camera.device.start_stream()
+		#camera.device.start_stream()
 
 	#for i in range(0, num_images):
 		'''
@@ -139,14 +158,18 @@ def acquire_hdr_images(cameras, SETTINGS):
 			device until after the next frame. Because of this, two images are
 			retrieved, the first of which is discarded.
 		'''
-		print(f'{TAB2}Getting HDR image {i}')
+		#print(f'{TAB2}Getting HDR image {i}')
 
 		# High exposure time
 		camera.nodes['ExposureTime'].value = exposure_h
+	trig(cameras)
+	for camera in cameras:
 		#trigger_software_once_armed(nodes)
-		image_pre_high = camera.device.get_buffer()
+		image_pre_high.append(camera.device.get_buffer())
+	trig(cameras)
+	for camera in cameras:
 		#trigger_software_once_armed(nodes)
-		image_high = camera.device.get_buffer()
+		image_high.append(camera.device.get_buffer())
 
 	print(f"{TAB1}{TAB2}Image High Exposure {camera.nodes['ExposureTime'].value /  1e6}")
 
@@ -154,10 +177,14 @@ def acquire_hdr_images(cameras, SETTINGS):
 
 		# Medium exposure time
 		camera.nodes['ExposureTime'].value = exposure_m
+	trig(cameras)
+	for camera in cameras:
 		#trigger_software_once_armed(nodes)
-		image_pre_mid = camera.device.get_buffer()
+		image_pre_mid.append(camera.device.get_buffer())
+	trig(cameras)
+	for camera in cameras:
 		#trigger_software_once_armed(nodes)
-		image_mid = camera.device.get_buffer()
+		image_mid.append(camera.device.get_buffer())
 
 	print(f"{TAB1}{TAB2}Image Mid Exposure {camera.nodes['ExposureTime'].value / 1e6}")
 
@@ -165,10 +192,14 @@ def acquire_hdr_images(cameras, SETTINGS):
 
 		# Low exposure time
 		camera.nodes['ExposureTime'].value = exposure_l
+	trig(cameras)
+	for camera in cameras:
 		#trigger_software_once_armed(nodes)
-		image_pre_low = camera.device.get_buffer()
+		image_pre_low.append(camera.device.get_buffer())
+	trig(cameras)
+	for camera in cameras:
 		#trigger_software_once_armed(nodes)
-		image_low = camera.device.get_buffer()
+		image_low.append(camera.device.get_buffer())
 
 	print(f"{TAB1}{TAB2}Image Low Exposure {camera.nodes['ExposureTime'].value / 1e6}")
 
@@ -190,21 +221,21 @@ def acquire_hdr_images(cameras, SETTINGS):
 		hdr_images.append(i_low)
 	'''
 		
-	Save_Image.save_image(image_pre_high.pdata, image_pre_high.height, image_pre_high.width)
-	Save_Image.save_image(image_high.pdata, image_high.height, image_high.width)
-	Save_Image.save_image(image_pre_mid.pdata, image_pre_mid.height, image_pre_mid.width)
-	Save_Image.save_image(image_mid.pdata, image_mid.height, image_mid.width)
-	Save_Image.save_image(image_pre_low.pdata, image_pre_low.height, image_pre_low.width)
-	Save_Image.save_image(image_low.pdata, image_low.height, image_low.width)
-
-	for camera in cameras:
+	for i, camera in enumerate(cameras):
+		#Save_Image.save_image(camera, image_pre_high[i].pdata, image_pre_high[i].height, image_pre_high[i].width)
+		Save_Image.save_image(camera, image_high[i].pdata, image_high[i].height, image_high[i].width)
+		#Save_Image.save_image(camera, image_pre_mid[i].pdata, image_pre_mid[i].height, image_pre_mid[i].width)
+		Save_Image.save_image(camera, image_mid[i].pdata, image_mid[i].height, image_mid[i].width)
+		#Save_Image.save_image(camera, image_pre_low[i].pdata, image_pre_low[i].height, image_pre_low[i].width)
+		Save_Image.save_image(camera, image_low[i].pdata, image_low[i].height, image_low[i].width)
+	
 		# Requeue buffers
-		camera.device.requeue_buffer(image_pre_high)
-		camera.device.requeue_buffer(image_high)
-		camera.device.requeue_buffer(image_pre_mid)
-		camera.device.requeue_buffer(image_mid)
-		camera.device.requeue_buffer(image_pre_low)
-		camera.device.requeue_buffer(image_low)
+		camera.device.requeue_buffer(image_pre_high[i])
+		camera.device.requeue_buffer(image_high[i])
+		camera.device.requeue_buffer(image_pre_mid[i])
+		camera.device.requeue_buffer(image_mid[i])
+		camera.device.requeue_buffer(image_pre_low[i])
+		camera.device.requeue_buffer(image_low[i])
 
 		camera.device.stop_stream()
 

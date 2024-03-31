@@ -14,6 +14,7 @@ import Camera_Detection
 import Save_Image
 import Parse_CSV
 import time
+import sys
 from arena_api.system import system
 ''' --- End of Imports --- '''
 
@@ -88,15 +89,10 @@ def get_multiple_image_buffers(camera,count):
 		f'Width = {buffer.width} pxl, '
 		f'Height = {buffer.height} pxl, '
 		f'Pixel Format = {buffer.pixel_format.name}')
+	
+	return buffer
 
-	''' Save Image '''
-	Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width)
-	print("\nImage Saved\n")
-
-	''' takes a buffer or many buffers in a list or tuple '''
-	camera.device.requeue_buffer(buffer)
-
-def initiate_imaging(cameras, SETTINGS):
+def initiate_imaging(cameras, SETTINGS, cam_buffer):
 
 	# Iterate through each user defined setting
 	for INDEX in range(len(SETTINGS)):
@@ -104,19 +100,21 @@ def initiate_imaging(cameras, SETTINGS):
 		if INDEX > 0:
 			# Change the camera settings according to the current user defined setting
 			Camera_Object.change_config(cameras, SETTINGS, INDEX)
+			time.sleep(1)
 	
 		# Repeat imaging for the number of times specified in the CSV file
 		for count in range(SETTINGS[INDEX].number):
-
-			# Indicate the cameras are ready for imaging
-			print("Ready!")
 
 			print(f"Buffer count: {count+1} / {SETTINGS[INDEX].number}")
 
 			# Iterate through each camera and get their buffers.
 			for camera in cameras:
 				# Get image buffer from the camera
-				get_multiple_image_buffers(camera, count)
+				buffer = get_multiple_image_buffers(camera, count)
+
+				cam_buffer[camera].append(buffer)
+
+	return cam_buffer
 
 def restore_initials(cameras):
 
@@ -145,19 +143,36 @@ def entry_point():
 		# Configure the cameras
 		Camera_Object.configure_cameras(cameras)
 
+		# Create a dictionary to store the buffers of each camera
+		cam_buffer = {}
+		for camera in cameras:
+			cam_buffer[camera] = []
+
 		input("Ready to initiate imaging.\nWaiting for User input...")
 
 		# Record the initial start time in nanoseconds
 		initial_time = time.time_ns()
 
 		# Start imaging
-		initiate_imaging(cameras, SETTINGS)
-
-		# Restore all the camera settings to initials
-		restore_initials(cameras)
+		cam_buffer = initiate_imaging(cameras, SETTINGS, cam_buffer)
 
 		# Calculate the total time this program took
 		total_time = time.time_ns() - initial_time
+
+		# Get the image buffers from the cameras		
+		for camera in cam_buffer:
+			for buffer in cam_buffer[camera]:
+				# Save the image
+				Save_Image.save_image(camera, buffer.pdata, buffer.height, buffer.width)
+				print("\nImage Saved\n")
+
+		for camera in cam_buffer:
+			for buffer in cam_buffer[camera]:
+				''' takes a buffer or many buffers in a list or tuple '''
+				camera.device.requeue_buffer(buffer)
+
+		# Restore all the camera settings to initials
+		restore_initials(cameras)
 
 		# Print out the total time
 		print("\nTotal time: ", total_time/6e10)

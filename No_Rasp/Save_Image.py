@@ -40,7 +40,7 @@ def save2fits(camera, imgarray, utc_isot, mjd, imgtyp='LIGHT'):
 		print('No good camera. Quitting...')
 		sys.exit(0)
 		
-	opfile = 'p' + str(mjd) + '_' + camera.name + '.fits'  # Create output FITS filename
+	opfile = 'images/p' + str(mjd) + '_' + camera.name + '.fits'  # Create output FITS filename
 
 	medianADU = np.median(imgarray)
 
