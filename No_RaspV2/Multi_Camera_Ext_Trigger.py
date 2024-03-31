@@ -99,6 +99,7 @@ def initiate_imaging(cameras, SETTINGS, cam_buffer):
 		if INDEX > 0:
 			# Change the camera settings according to the current user defined setting
 			Camera_Object.change_config(cameras, SETTINGS, INDEX)
+			time.sleep(1)
 	
 		# Repeat imaging for the number of times specified in the CSV file
 		for count in range(SETTINGS[INDEX].number):
@@ -154,6 +155,9 @@ def entry_point():
 		# Start imaging
 		cam_buffer = initiate_imaging(cameras, SETTINGS, cam_buffer)
 
+		# Calculate the total time this program took
+		total_time = time.time_ns() - initial_time
+
 		# Get the image buffers from the cameras		
 		for camera in cam_buffer:
 			for buffer in cam_buffer[camera]:
@@ -168,9 +172,6 @@ def entry_point():
 
 		# Restore all the camera settings to initials
 		restore_initials(cameras)
-
-		# Calculate the total time this program took
-		total_time = time.time_ns() - initial_time
 
 		# Print out the total time
 		print("\nTotal time: ", total_time/6e10)

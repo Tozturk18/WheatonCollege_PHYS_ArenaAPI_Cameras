@@ -54,6 +54,7 @@ class Camera:
 			'\nTemperature (C)\t=', self.nodes['DeviceTemperature'].value, 
 			'\nFramerate (Hz) \t=', self.nodes['AcquisitionFrameRate'].value, 
 			'\nExptime (s)    \t=', self.exposure,
+			'\nExptime (s)	  \t=', self.nodes['ExposureTime'].value / 1e6,
 			'\nOffset (ADU)   \t=', self.offset,
 			'\nGain (dB)      \t=', self.gain,
 			'\nBuffer Number  \t=', self.buffers)
@@ -196,8 +197,8 @@ class Camera:
 			'\nImages:', self.nodes['Width'].value, 'x',  self.nodes['Height'].value, self.nodes['PixelFormat'].value,
 			'\nTemperature (C)\t=', self.nodes['DeviceTemperature'].value, 
 			'\nFramerate (Hz) \t=', self.nodes['AcquisitionFrameRate'].value, 
-			#'\nExptime (s)    \t=', self.exposure,
-			'\nExptime(s)	  \t=', self.nodes['exposureTime'].value,
+			'\nExptime (s)    \t=', self.exposure,
+			'\nExptime (s)	  \t=', self.nodes['ExposureTime'].value / 1e6,
 			'\nOffset (ADU)   \t=', self.offset,
 			'\nGain (dB)      \t=', self.gain,
 			'\nBuffer Number  \t=', self.buffers)
