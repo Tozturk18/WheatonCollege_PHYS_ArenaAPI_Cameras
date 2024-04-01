@@ -127,7 +127,7 @@ def initiate_imaging(cameras, SETTINGS, cam_buffer, ser):
 		if INDEX > 0:
 			# Change the camera settings according to the current user defined setting
 			Camera_Object.change_config(cameras, SETTINGS, INDEX)
-			ser.write(('p_'+str(SETTINGS[INDEX].exposure)).encode())
+			ser.write(('p_'+str(SETTINGS[INDEX-1].exposure)).encode())
 			for camera in cameras:
 				print("stuck1")
 				camera.device.get_buffer()
