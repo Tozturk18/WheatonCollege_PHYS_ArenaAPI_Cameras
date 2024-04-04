@@ -142,15 +142,19 @@ def initiate_imaging(cameras, SETTINGS, cam_buffer, ser):
 
 			ser.write(str(SETTINGS[INDEX].exposure).encode())
 
-			rasp_output = ser.readline().decode()
-			while (rasp_output == ''):
-				rasp_output = ser.readline().decode()
-			data = json.loads(rasp_output)
+			
 
 			# Iterate through each camera and get their buffers.
-			for camera in cameras:
+			for i, camera in enumerate(cameras):
 				print("stuck2")
 				buffer = camera.device.get_buffer()
+				print("stuck3")
+				if i == 0:
+					rasp_output = ser.readline().decode()
+					while (rasp_output == ''):
+						rasp_output = ser.readline().decode()
+					data = json.loads(rasp_output)
+
 				print(
 					f'\tbuffer{count+1:{2}} received | '
 					f'Width = {buffer.width} pxl, '

@@ -16,5 +16,5 @@ cam1,cam2,cam3,exp,off,gain,n_img
 #r,g,b,0.005,100,1,5
 #r,g,b,0.001,100,1,10
 # Produces 216 images at 2.15 minutes
-r,g,b,1,0,0,5
-r,g,b,2,0,0,5
+r,g,b,1,0,0,1
+r,g,b,9,0,0,5
